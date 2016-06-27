@@ -414,9 +414,7 @@
             var received;
             var queue = this;
 
-            console.dir(this);
-
-            // error 건너뛰기
+            // _fail 건너뛰기
             while( queue && !queue._success ) {
                 queue = queue._next;
             }
@@ -432,12 +430,31 @@
             }
 
             if( received instanceof ADUN.Deferred ) {
-
+                ADUN.Deferred._insert(queue, received);
             } else if( queue._next instanceof ADUN.Deferred ) {
                 // 연결리스트에서 다음 객체가 Deferred의 인스턴스라면 진입.
                 queue._next.call(received);
             }
+        },
 
+        fail: function(arg) {
+            var result, err, queue = this;
+
+            // _sucess 건너뛰기
+            while( queue && !queue._fail ) {
+                queue = queue._next;
+            }
+
+            if( queue instanceof ADUN.Deferred ) {
+                result = queue._fail(arg);
+                queue.call(result);
+            } else if ( arg instanceof Error ) {
+                throw arg;
+            } else {
+                err = new Error('faild in Deferred');
+                err.arg = arg;
+                throw err;
+            }
         }
     });
 
@@ -451,6 +468,69 @@
         }, 0);
 
         return queue;
+    };
+
+    Deferred._insert = function(queue, ins) {
+        // 만약 현재 큐의 _next가 Deffered의 인스턴스라면 블록에 진입
+        if ( queue._next instanceof ADUN.Deferred ) {
+            ins._tail_next = queue._next;
+        }
+        // 현재 큐의 _next에 새로운 Defferd의 인스턴스를 참조시킨다.
+        queue._next = ins;
+    };
+
+    // 평행
+    Deferred.parallel = function(arg) {
+        var q = new ADUN.Deferred();
+        q._id = setTimeout(function() {
+            q.call();
+        }, 0);
+
+        var progress = 0,
+            ret = ( ADUN.Utils.isArray(arg) ) ? [] : {},
+            p = new ADUN.Deferred(),
+            prop;
+
+        for(prop in arg) {
+            if( ADUN.has(arg, prop) ) {
+                progress ++;
+
+                // 복사본을 즉시실행함수에 바로 넘겨준다.
+                (function(queue, name) {
+
+                    queue.next(function(arg) {
+                        progress --;
+
+                        ret[name] = arg;   // 리턴된 값,
+
+                        // 모든 Deferred가 리턴되었다면 블록안에 진입.
+                        if( progress <= 0 ) {
+                            p.call(ret);
+                        }
+
+                    }).error(function(err) {
+                        p.fail(err);
+                    });
+
+                    if ( ADUN.isNumber(queue._id) ) {
+                        clearTimeOut(queue._id);
+                    }
+
+                    queue._id = setTimeout(function() {
+                        queue.call();
+                    }, 0);
+
+                })(arg[prop], prop); // Deffered 함수, 이름
+            }
+        }
+
+        if( !progress ) {
+            p._id = setTimout(function() {
+                p.call(ret);
+            }, 0);
+        }
+
+        return q.next(function() { return p });
     }
 })();
 
