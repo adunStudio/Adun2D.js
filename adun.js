@@ -18,35 +18,39 @@
  *  MIT-style license
  */
 
-(function() {
-    var LOGO = [
-        [' █████╗  ██████╗  ██╗   ██╗ ███╗   ██╗          ██╗ ███████╗'],
-        ['██╔══██╗ ██╔══██╗ ██║   ██║ ████╗  ██║          ██║ ██╔════╝'],
-        ['███████║ ██║  ██║ ██║   ██║ ██╔██╗ ██║          ██║ ███████╗'],
-        ['██╔══██║ ██║  ██║ ██║   ██║ ██║╚██╗██║     ██   ██║ ╚════██║'],
-        ['██║  ██║ ██████╔╝ ╚██████╔╝ ██║ ╚████║ ██╗ ╚█████╔╝ ███████║'],
-        ['╚═╝  ╚═╝ ╚═════╝   ╚═════╝  ╚═╝  ╚═══╝ ╚═╝  ╚════╝  ╚══════╝']
-    ];
-    var STRING = '';
 
-    for(var I = 0; I < LOGO.length; ++I) {
-        STRING = '';
-        for(var S = 0; S < LOGO[I].length; ++S) {
-            STRING += LOGO[I][S];
-        }
-        console.log(STRING);
-    }
-})();
 
 //# ADUN NAMESPACE
 (function(global){
     'use strict';
+
+
 
     var ADUN =  {
         VERSION: '0.0.1'
     };
 
     global.ADUN = global.Adun = global.adun = ADUN;
+
+    (function() {
+        var LOGO = [
+            [' █████╗  ██████╗  ██╗   ██╗ ███╗   ██╗          ██╗ ███████╗'],
+            ['██╔══██╗ ██╔══██╗ ██║   ██║ ████╗  ██║          ██║ ██╔════╝'],
+            ['███████║ ██║  ██║ ██║   ██║ ██╔██╗ ██║          ██║ ███████╗'],
+            ['██╔══██║ ██║  ██║ ██║   ██║ ██║╚██╗██║     ██   ██║ ╚════██║'],
+            ['██║  ██║ ██████╔╝ ╚██████╔╝ ██║ ╚████║ ██╗ ╚█████╔╝ ███████║'],
+            ['╚═╝  ╚═╝ ╚═════╝   ╚═════╝  ╚═╝  ╚═══╝ ╚═╝  ╚════╝  ╚══════╝']
+        ];
+        var STRING = '';
+
+        for(var I = 0; I < LOGO.length; ++I) {
+            STRING = '';
+            for(var S = 0; S < LOGO[I].length; ++S) {
+                STRING += LOGO[I][S];
+            }
+            console.log(STRING);
+        }
+    })();
 
     // 확장 메서드
     ADUN.extend = function() {
@@ -330,7 +334,7 @@
             throw new Error('definition is undefined (ADUN.Class)');
         }
 
-        var name, extend = definition.extend;
+        var name, extend = definition.EXTEND;
         var prototype = {};  // 빈 객체
 
         if( extend && ADUN.Utils.isObject(extend) ) {
@@ -361,7 +365,7 @@
             }
         };
         Class.prototype = prototype;
-        Class.constructor = definition.TYPE ||  ADUN.Class  ;
+        Class.constructor =  ADUN.Class;
 
         return Class;
     }
@@ -371,66 +375,82 @@
 (function() {
     'use strict';
 
-    var Deffered = ADUN.Deffered = ADUN.Class({
+    var Deferred = ADUN.Deferred = ADUN.Class({
+        TYPE: 'Deferred',
+        EXTEND: null,
 
         init: function() {
-            this._success = this._fail = this._next = this._id = null;
+            this._success   =   this._fail  =   this._next  =   this._id    = null;
             this._tail = this;
         },
 
+        _add: function(queue) {
+
+            // 큐 방식의 연결리스트 자료구조를 사용한다.
+
+            // 마지막에 추가된 Deffered 객체._next => 마지막에 추가된 Deffered 객체
+            this._tail._next = queue;
+
+            // 꼬리는 항상 마지막에 추가된 Deffered 객체를 가리킨다.
+            this._tail = queue;
+
+            // 연결리스트에서 맨 처음 Deffered 객체 반환 (체이닝 기법?)
+            return this;
+        },
+
         next: function(func) {
-            var queue = new ADUN.Deffered();
+            var queue = new ADUN.Deferred();
             queue._success = func;
             return this._add(queue);
         },
 
         error: function(func) {
-            var queue = new ADUN.Deffered();
+            var queue = new ADUN.Deferred();
             queue._fail = func;
             return this._add(queue);
         },
 
-        _add: function(queue) {
-            this._tail._next = queue;
-            this._tail = queue;
-            return this;
-        },
-
         call: function(arg) {
-            var received, queue = this;
+            var received;
+            var queue = this;
 
-            while(queue && !queue._succ) {
+            console.dir(this);
+
+            // error 건너뛰기
+            while( queue && !queue._success ) {
                 queue = queue._next;
             }
-            if( !(queue instanceof ADUN.Deffered) ) {
+
+            if( !(queue instanceof ADUN.Deferred ) ) {
                 return;
             }
+
             try {
-                received = queue._succ(arg);
-            } catch(e) {
-                return queue.fail(e);
+                received = queue._success(arg);
+            } catch (e) {
+                return queue.fail(arg);
             }
 
-            if( received instanceof ADUN.Deffered ) {
-                ADUN.Deffered._insert(queue, received);
-            } else if( queue._next in  ADUN.Deffered ) {
+            if( received instanceof ADUN.Deferred ) {
+
+            } else if( queue._next instanceof ADUN.Deferred ) {
+                // 연결리스트에서 다음 객체가 Deferred의 인스턴스라면 진입.
                 queue._next.call(received);
             }
 
         }
     });
 
-    Deffered._insert = function(qeueue, ins) {
-        if( queue._next instanceof ADUN.Deffered ) {
-            ins._tail._next = queue._next;
-        }
-        queue._next = ins;
-    };
+    Deferred.next = function(func) {
+        var queue = new ADUN.Deferred().next(func);
 
-    Deffered.next = function(func) {
-        var q = new ADUN.Deffered().next(func);
-        q._id = setTimeout(function() {q.call();}, 0);
-        return q;
+        // 타이머 함수를 이용하여 비동기성을 가진다.
+        // (함수 스택이 클리어되었을때 실행된다.)
+        queue._id = setTimeout(function() {
+            queue.call();
+        }, 0);
+
+        return queue;
     }
 })();
 
@@ -441,6 +461,9 @@
     'use strict';
 
     var EventTarget = ADUN.EventTarget = ADUN.Class({
+        TYPE: 'EventTarget',
+        EXTEND: null,
+
         init: function() {
             // 리스너 목록 => 빈 객체
             this._listeners = {};
@@ -505,7 +528,8 @@
     var INSTANCE  = null;
 
     var Heart = ADUN.Heart = ADUN.Class({
-        extend: ADUN.EventTarget,
+        TYPE: 'Heart',
+        EXTEND: ADUN.EventTarget,
 
         init: function(id, height, width) {
             if( window.document.body == null ) { throw new Error("document.body is null. Please excute 'new ADUN.Heart()' in window.onload. (ADUN.Heart)"); }
