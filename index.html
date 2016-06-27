@@ -12,12 +12,15 @@
 <script>
     var game = new ADUN.Heart('canvas');
 
-    ADUN.Deferred.next(function() {
-        return 32
-    }).next(function(n) {
-        alert(n)
-    }).next(function() {
-        alert('hello')
-    });
+    ADUN.Deferred.parallel([
+            ADUN.Deferred.next(function() {
+                return 24;
+            }),
+            ADUN.Deferred.next(function() {
+                return 12;
+            })
+    ]).next(function(arg) {
+        alert(arg); // [24, 12]
+    })
 
 </script>

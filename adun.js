@@ -245,11 +245,13 @@
 
     // 인자가 Type값 인가? 에 대한 isType 메서드를 추가한다.
     // Type => Arguments, Function, String, Number, Date, RegExp, Error
-    ADUN.each(['Arguments,', 'Function', 'String', 'Nunmber', 'Date', 'RegExp', 'Error'], function(name) {
+    ADUN.each(['Arguments,', 'Function', 'String', 'Number', 'Date', 'RegExp', 'Error'], function(name) {
         ADUN.Utils['is' + name] = function() {
             return Object.prototype.toString.call(arguments[0]) === '[object ' + name + ']';
         }
     });
+
+    ADUN.extend(ADUN, ADUN.Utils);
 
 
 })();
@@ -473,7 +475,7 @@
     Deferred._insert = function(queue, ins) {
         // 만약 현재 큐의 _next가 Deffered의 인스턴스라면 블록에 진입
         if ( queue._next instanceof ADUN.Deferred ) {
-            ins._tail_next = queue._next;
+            ins._tail._next = queue._next;
         }
         // 현재 큐의 _next에 새로운 Defferd의 인스턴스를 참조시킨다.
         queue._next = ins;
@@ -494,10 +496,9 @@
         for(prop in arg) {
             if( ADUN.has(arg, prop) ) {
                 progress ++;
-
-                // 복사본을 즉시실행함수에 바로 넘겨준다.
+                // 복사본(Deferred 인스턴스)을 즉시실행함수에 바로 넘겨준다.
                 (function(queue, name) {
-
+                    // 복사본.next(fn)
                     queue.next(function(arg) {
                         progress --;
 
@@ -505,14 +506,14 @@
 
                         // 모든 Deferred가 리턴되었다면 블록안에 진입.
                         if( progress <= 0 ) {
+                            //
                             p.call(ret);
                         }
 
-                    }).error(function(err) {
-                        p.fail(err);
-                    });
+                    }).error(function(err) { p.fail(err); });
 
-                    if ( ADUN.isNumber(queue._id) ) {
+                    // Defereed.next에서 호출했던 타이머함수 clear
+                    if ( ADUN.Utils.isNumber(queue._id) ) {
                         clearTimeout(queue._id);
                     }
 
@@ -524,13 +525,15 @@
             }
         }
 
+        // Deffered 객체가 없다면...
         if( progress == 0 ) {
-            p._id = setTimout(function() {
+            p._id = setTimeout(function() {
                 p.call(ret);
             }, 0);
         }
 
-        return q.next(function() { return p });
+        //                                  p => ret를 반환하는 Deferred 인스턴스
+        return q.next(function() { return p; });
     }
 })();
 
