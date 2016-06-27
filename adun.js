@@ -28,9 +28,6 @@
         ['╚═╝  ╚═╝ ╚═════╝   ╚═════╝  ╚═╝  ╚═══╝ ╚═╝  ╚════╝  ╚══════╝']
     ];
     var STRING = '';
-    function colorTrace(msg) {
-        console.log("%c" + msg, 'color:#FF0000;background:yellow;');
-    }
 
     for(var I = 0; I < LOGO.length; ++I) {
         STRING = '';
@@ -41,6 +38,7 @@
     }
 })();
 
+//# ADUN NAMESPACE
 (function(global){
     'use strict';
 
@@ -152,6 +150,22 @@
 
     };
 
+    // 파일 확장자 찾기
+    ADUN.findExtention = function(path) {
+        var extention = path.match(/\.\w+$/);  // 확장자
+
+        if( extention && extention.length > 0) {
+            return extention[0].slice(1).toLowerCase();
+        }
+
+        // data URI
+        if( path.indexOf('data:') == 0 ) {
+            return path.split(/[\/;]/)[1].toLowerCase();
+        }
+
+        return null;
+    };
+
     function optimize(func, context, argCount) {
         if(context === void 0) return func;
         switch(argCount == null ? 3 : argCount) {
@@ -236,51 +250,7 @@
 
 })();
 
-(function() {
-    'use strict';
-
-    var Class = ADUN.Class = function(definition) {
-        if(definition == null) {
-            throw new Error('definition is undefined (adun.Class)');
-        }
-
-        var name, extend = definition.extend;
-        var prototype = {};  // 빈 객체
-
-        if( extend && ADUN.Utils.isObject(extend) ) {
-            if( extend.constructor != adun.Class ) {
-                throw new Error('extend constructor is not adun.Class (adun.Class)');
-            }
-            prototype = new extend('!ADUN.INIT');
-        }
-
-        for ( name in definition ) {
-            prototype[name] = ( ADUN.Utils.isFunction(definition[name]) && adun.Utils.isFunction(prototype[name]) ) ?
-                (function(name, fn) {
-                    return function() {
-                        this.super = extend.prototype[name];
-                        var ret = fn.apply(this, arguments);
-                        delete this.super;
-                        return ret;
-                    }
-                })(name, definition[name]) :
-                definition[name];
-
-        }
-
-
-        var Class = function() {
-            if(this.init && arguments[0] !== '!ADUN.INIT') {
-                this.init.apply(this, arguments);
-            }
-        };
-        Class.prototype = prototype;
-        Class.constructor = definition.TYPE ||  ADUN.Class  ;
-
-        return Class;
-    }
-})();
-
+// #ENV
 (function() {
     var ua = navigator.userAgent;
 
@@ -351,6 +321,122 @@
     }
 })();
 
+// #Class
+(function() {
+    'use strict';
+
+    var Class = ADUN.Class = function(definition) {
+        if(definition == null) {
+            throw new Error('definition is undefined (ADUN.Class)');
+        }
+
+        var name, extend = definition.extend;
+        var prototype = {};  // 빈 객체
+
+        if( extend && ADUN.Utils.isObject(extend) ) {
+            if( extend.constructor != ADUN.Class ) {
+                throw new Error('extend constructor is not adun.Class (ADUN.Class)');
+            }
+            prototype = new extend('!ADUN.INIT');
+        }
+
+        for ( name in definition ) {
+            prototype[name] = ( ADUN.Utils.isFunction(definition[name]) && adun.Utils.isFunction(prototype[name]) ) ?
+                (function(name, fn) {
+                    return function() {
+                        this.super = extend.prototype[name];
+                        var ret = fn.apply(this, arguments);
+                        delete this.super;
+                        return ret;
+                    }
+                })(name, definition[name]) :
+                definition[name];
+
+        }
+
+
+        var Class = function() {
+            if(this.init && arguments[0] !== '!ADUN.INIT') {
+                this.init.apply(this, arguments);
+            }
+        };
+        Class.prototype = prototype;
+        Class.constructor = definition.TYPE ||  ADUN.Class  ;
+
+        return Class;
+    }
+})();
+
+// # deferred
+(function() {
+    'use strict';
+
+    var Deffered = ADUN.Deffered = ADUN.Class({
+
+        init: function() {
+            this._success = this._fail = this._next = this._id = null;
+            this._tail = this;
+        },
+
+        next: function(func) {
+            var queue = new ADUN.Deffered();
+            queue._success = func;
+            return this._add(queue);
+        },
+
+        error: function(func) {
+            var queue = new ADUN.Deffered();
+            queue._fail = func;
+            return this._add(queue);
+        },
+
+        _add: function(queue) {
+            this._tail._next = queue;
+            this._tail = queue;
+            return this;
+        },
+
+        call: function(arg) {
+            var received, queue = this;
+
+            while(queue && !queue._succ) {
+                queue = queue._next;
+            }
+            if( !(queue instanceof ADUN.Deffered) ) {
+                return;
+            }
+            try {
+                received = queue._succ(arg);
+            } catch(e) {
+                return queue.fail(e);
+            }
+
+            if( received instanceof ADUN.Deffered ) {
+                ADUN.Deffered._insert(queue, received);
+            } else if( queue._next in  ADUN.Deffered ) {
+                queue._next.call(received);
+            }
+
+        }
+    });
+
+    Deffered._insert = function(qeueue, ins) {
+        if( queue._next instanceof ADUN.Deffered ) {
+            ins._tail._next = queue._next;
+        }
+        queue._next = ins;
+    };
+
+    Deffered.next = function(func) {
+        var q = new ADUN.Deffered().next(func);
+        q._id = setTimeout(function() {q.call();}, 0);
+        return q;
+    }
+})();
+
+
+
+// #eventTarget
 (function() {
     'use strict';
 
@@ -390,7 +476,19 @@
         },
 
         dispatchEvent: function(e) {
+            e.target = this;
 
+            if( !ADUN.Utils.isUndefined(this['on' + e.type]) ) {
+                this['on' + e.type](e);
+            }
+
+            var listeners = this._listeners[e.type];
+            if( !ADUN.Utils.isUndefined(listeners[e.type]) ) {
+                listeners = listeners.slice();
+                for(var i = 0, len = listeners.length; i < len; ++i) {
+                    listeners[i].call(this, e);
+                }
+            }
         },
 
         // emit === dispatchEvent
@@ -398,6 +496,154 @@
             this.dispatchEvent.call(this, e);
         }
     });
+})();
+
+
+// #heart
+(function() {
+    'use strict';
+    var INSTANCE  = null;
+
+    var Heart = ADUN.Heart = ADUN.Class({
+        extend: ADUN.EventTarget,
+
+        init: function(id, height, width) {
+            if( window.document.body == null ) { throw new Error("document.body is null. Please excute 'new ADUN.Heart()' in window.onload. (ADUN.Heart)"); }
+
+            // 싱글톤
+            if ( INSTANCE ) { throw new Error("Instances of Heart shall be only one. (ADUN.Heart)"); }
+
+            var stage = document.getElementById(id);
+            if( !stage ) { throw new Error("main canvas is undefined (ADUN.Heart)"); }
+
+
+            this.super();
+
+            INSTANCE = ADUN.Heart.instance = this;
+
+            this._calledTime = 0;
+            this._mouseDownID = 0;
+            this._surfaceID = 0;
+            this._soundID = 0;
+
+            this._scenes = [];
+
+            width = width || 320;
+            height = height || 320;
+
+            var style, scale, sWidth, sHeight;
+            style = window.getComputedStyle(stage) || stage.currentStyle;
+            sWidth = parseInt(style.width, 10);
+            sHeight = parseInt(style.height, 10);
+
+            if(sWidth && sHeight) {
+                scale = Math.min(sWidth / width, sHeight / height);
+            }
+
+            stage.style.position = 'relative';
+
+            var bounding = stage.getBoundingClientRect();
+            this._pageX = Math.round(window.scrollX || window.pageXOffset + bounding.left);
+            this._pageY = Math.round(window.scrollY || window.pageYOffset + bounding.top);
+
+            stage.style.fontSize = '12px';
+            stage.style.webkitTextSizeAdjust = 'none';
+            stage.style.webkitTapHighlightColor = 'rgba(0, 0, 0, 0)';
+            this._canvas = stage;
+
+            this._width = width;
+            this._height = height;
+            this.scale = scale;
+
+            this.fps = 30;
+
+            this.frame = 0;
+
+            this.ready = false;
+
+            this.running = false;
+
+            this.assets = {};
+
+
+
+        },
+
+
+
+        preLoad: function(assets) {
+            var name, ASSETS = [];
+            if( !ADUN.Utils.isArray(assets) ) {
+                if( ADUN.Utils.isObject(assets) ) {
+                    for(name in assets) {
+                        if( ADUN.has(assets, name) ) {
+                            ASSETS.push([assets[name], name]);
+                        }
+                    }
+                    assets = ASSETS;
+                } else {
+                    assets = Array.prototype.slice.call(arguments);
+                }
+            }
+
+            Array.prototype.push.apply(this._pre, assets);
+            return this;
+        },
+
+
+
+
+
+
+    })
+
+})();
+
+
+// # ASSET
+(function() {
+    'use strict';
+
+    var Asset = ADUN.Asset = {};
+
+    Asset._pre = ADUN._pre = [];
+    Asset._assets = ADUN._assets = [];
+
+    Asset.asset = function(assets) {
+        var name, ASSETS = [];
+
+        if( !ADUN.Utils.isArray(assets) ) {
+            if( ADUN.Utils.isObject(assets) ) {
+                for(name in assets) {
+                    if( ADUN.has(assets, name) ) {
+                        ASSETS.push([assets[name], name]);
+                    }
+                }
+                assets = ASSETS;
+            }
+            else {
+                assets = Array.prototype.slice.call(arguments);
+            }
+        }
+        Array.prototype.push.apply(this._assets, assets);
+    };
+
+    Asset.load = function(src, alias, callback, onerror) {
+        var assetName, tempCallback, file;
+        if( ADUN.Utils.isString(arguments[1]) ) {
+            assetName = alias;
+            callback = callback || function() { };
+            onerror = onerror || function() { };
+        } else {
+            assetName = src;
+            tempCallback = callback;
+            callback = arguments[1];
+            onerror = tempCallback || function() { };
+        }
+
+        file = ADUN.findExtention(src);
+
+    }
 })();
 
 
