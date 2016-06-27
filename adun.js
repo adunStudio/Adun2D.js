@@ -281,6 +281,125 @@
     }
 })();
 
+(function() {
+    var ua = navigator.userAgent;
+
+    var ENV = ADUN.ENV = {
+
+        VERSION: ADUN.VERSION,
+
+        // 사용자 브라우저
+        BROWSER: (function(ua) {
+            if (/Eagle/.test(ua)) {
+                return 'eagle';
+            } else if (/Opera/.test(ua)) {
+                return 'opera';
+            } else if (/MSIE|Trident/.test(ua)) {
+                return 'ie';
+            } else if (/Chrome/.test(ua)) {
+                return 'chrome';
+            } else if (/(?:Macintosh|Windows).*AppleWebKit/.test(ua)) {
+                return 'safari';
+            } else if (/(?:iPhone|iPad|iPod).*AppleWebKit/.test(ua)) {
+                return 'mobilesafari';
+            } else if (/Firefox/.test(ua)) {
+                return 'firefox';
+            } else if (/Android/.test(ua)) {
+                return 'android';
+            } else {
+                return '';
+            }
+        })(ua),
+
+        // 사용자 벤더
+        VENDOR_PREFIX: (function() {
+            if (ua.indexOf('Opera') !== -1) {
+                return 'O';
+            } else if (/MSIE|Trident/.test(ua)) {
+                return 'ms';
+            } else if (ua.indexOf('WebKit') !== -1) {
+                return 'webkit';
+            } else if (navigator.product === 'Gecko') {
+                return 'Moz';
+            } else {
+                return '';
+            }
+        })(),
+
+        // 터치
+        TOUCH_ENABLED: (function() {
+            return 'ontouchstart' in window || navigator.maxTouchPoints;
+        })(),
+
+        KEY_BIND_TABLE: {
+            13: 'enter',
+            27: 'esc',
+            32: 'space',
+            37: 'left',
+            38: 'up',
+            39: 'right',
+            40: 'down',
+            65: 'a',
+            83: 's',
+            68: 'd',
+            70: 'f',
+            81: 'q',
+            87: 'w',
+            69: 'e',
+            82: 'r'
+        }
+    }
+})();
+
+(function() {
+    'use strict';
+
+    var EventTarget = ADUN.EventTarget = ADUN.Class({
+        init: function() {
+            // 리스너 목록 => 빈 객체
+            this._listeners = {};
+        },
+
+        addEventListener: function(type, listener) {
+            // 리스터[타입] = > 리스너 목록(배열)
+            var listeners = this._listeners[type];
+
+            // 리스너 목록이 없다면 IF 블록에 진입.
+            if( ADUN.Utils.isUndefined(listeners) ) {
+                this.listeners[type] = [listener];
+
+            } else if( listener.indexOf(listener) === -1 ) {
+                // 리스너 목록 맨 앞에 추가.
+                listener.unshift(listener);
+            }
+        },
+
+        // on == addEventListener
+        on: function() {
+            this.addEventListener.apply(this, arguments);
+        },
+
+        clearEventListener: function(type) {
+            // 인자가 있을 경우 해당 타입의 리스너 삭제.
+            // 인자가 없을 경우 리스너 모두 삭제.
+            if( !ADUN.Utils.isUndefined(type) ) {
+                delete this._listeners[type];
+            } else {
+                this._listeners = {};
+            }
+        },
+
+        dispatchEvent: function(e) {
+
+        },
+
+        // emit === dispatchEvent
+        emit: function(e) {
+            this.dispatchEvent.call(this, e);
+        }
+    });
+})();
+
 
 
 
