@@ -513,7 +513,7 @@
                     });
 
                     if ( ADUN.isNumber(queue._id) ) {
-                        clearTimeOut(queue._id);
+                        clearTimeout(queue._id);
                     }
 
                     queue._id = setTimeout(function() {
@@ -524,7 +524,7 @@
             }
         }
 
-        if( !progress ) {
+        if( progress == 0 ) {
             p._id = setTimout(function() {
                 p.call(ret);
             }, 0);
