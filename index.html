@@ -10,17 +10,11 @@
 </html>
 <script src="./adun.js"></script>
 <script>
-    var game = new ADUN.Heart('canvas');
+    var sprite = new ADUN.Node();
+    console.log(sprite._dirty)
+    sprite.x = 12;
+    console.log(sprite._x)
+    console.log(sprite._dirty)
 
-    ADUN.Deferred.parallel([
-            ADUN.Deferred.next(function() {
-                return 24;
-            }),
-            ADUN.Deferred.next(function() {
-                return 12;
-            })
-    ]).next(function(arg) {
-        alert(arg); // [24, 12]
-    })
 
 </script>

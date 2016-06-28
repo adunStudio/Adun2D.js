@@ -61,7 +61,7 @@
             deep = false;
 
         // 첫 번째 인자로 Boolean 값을 넣어 깊은 복사를 할 것인지 선택할 수 있다.
-        if( ADUN.Utils.isBoolean(target) ) {
+        if( typeof target === "boolean" ) {
             deep = target;
             target = arguments[i] || {};
             ++i;
@@ -82,7 +82,7 @@
             // 인자로 넘어온 객체의 프로퍼티를 options로 참조 시키고,
             // 이 프로퍼티가 null이 아닌 경우 블록 안으로 진입한다.
             if( (options = arguments[i]) != null) {
-                for(name in options) {
+                for( name in options ) {
                     // src  는 반환될 복사본 target의 프로퍼티를 참조하고,
                     // copy 는 복사할 원본의 프로퍼티를 참조한다.
                     src = target[name];
@@ -124,35 +124,21 @@
 
     };
 
-    // 객체가 프로퍼티를 직접적으로 가지고 있는가?
-    ADUN.has = function(obj, key) {
-        return obj != null && Object.prototype.hasOwnProperty.call(obj, key);
-    };
-
-    ADUN.keys = function(obj) {
-        if( !ADUN.Utils.isObject(obj)) { return []; }
-        var key, keys = [];
-        for(key in obj) {
-            if( ADUN.has(obj, key) ) {
-                keys.push(key);
-            }
+    if( typeof Function.prototype.bind !== 'function' ) {
+        Function.prototype.bind = function(thisObject) {
+            var func = this;
+            var args = Array.prototype.slice.call(arguments, 1);
+            var Nop = function() { };
+            var bound = function() {
+                var a = args.concat(Array.prototype.slice.call(arguments));
+                return func.apply(this instanceof Nop ? this : thisObject || window, a);
+            };
+            Nop.prototype = func.prototye;
+            bound.prototye = new Nop();
+            return bound;
         }
-        return keys;
-    };
+    }
 
-    ADUN.each = ADUN.forEach = function(obj, iterate, context) {
-        iterate = optimize(iterate, context);
-        var i, length;
-
-        if( ADUN.Utils.isArrayLike(obj) ) {
-            for(i = 0, length = obj.length; i < length; ++i) {
-                iterate(obj[i], i, obj); // value, index, obj
-            }
-        } else {
-
-        }
-
-    };
 
     // 파일 확장자 찾기
     ADUN.findExtention = function(path) {
@@ -169,6 +155,45 @@
 
         return null;
     };
+
+})(window);
+
+// _
+(function() {
+    'use strict';
+
+    var _ = ADUN._ = {};
+
+    // 객체가 프로퍼티를 직접적으로 가지고 있는가?
+    ADUN.has = _.has = function(obj, key) {
+        return obj != null && Object.prototype.hasOwnProperty.call(obj, key);
+    };
+
+    ADUN.keys = _.keys = function(obj) {
+        if( !ADUN.Utils.isObject(obj)) { return []; }
+        var key, keys = [];
+        for(key in obj) {
+            if( ADUN.has(obj, key) ) {
+                keys.push(key);
+            }
+        }
+        return keys;
+    };
+
+    ADUN.each = _.each = ADUN.forEach = function(obj, iterate, context) {
+        iterate = optimize(iterate, context);
+        var i, length;
+
+        if( ADUN.Utils.isArrayLike(obj) ) {
+            for(i = 0, length = obj.length; i < length; ++i) {
+                iterate(obj[i], i, obj); // value, index, obj
+            }
+        } else {
+
+        }
+
+    };
+
 
     function optimize(func, context, argCount) {
         if(context === void 0) return func;
@@ -195,8 +220,8 @@
             return func.apply(context, arguments);
         }
     }
+})();
 
-})(window);
 
 
 // #Utils
@@ -251,9 +276,7 @@
         }
     });
 
-    ADUN.extend(ADUN, ADUN.Utils);
-
-
+   ADUN.extend(ADUN, ADUN.Utils);
 })();
 
 // #ENV
@@ -378,7 +401,6 @@
     'use strict';
 
     var Deferred = ADUN.Deferred = ADUN.Class({
-        TYPE: 'Deferred',
         EXTEND: null,
 
         init: function() {
@@ -538,13 +560,43 @@
 })();
 
 
+// #Event
+(function() {
+    'use strict';
+    var Event = ADUN.Event = ADUN.Class({
+        init: function(type) {
+            this.type = type;
+            this.target = null;
+            this.x = 0;
+            this.y = 0;
+            this.localX = 0;
+            this.localY = 0;
+        },
 
-// #eventTarget
+        _initPosition: function(pageX, pageY) {
+            var heart = ADUN.Heart.instance;
+            this.x = this.localX = (pageX - heart._pageX) / heart.scale;
+            this.y = this.localY = (pageX - heart._pageY) / heart.scale;
+        }
+    });
+
+    Event.LOAD = 'load';
+    Event.ERROR = 'error';
+    Event.HEART_RESIZE = 'heartresize';
+    Event.PROGRESS = 'progress';
+    Event.ENTER_FRAME = 'enterframe';
+    Event.EXIT_FRAME = 'exitframe';
+    Event.ENTER = 'enter';
+    Event.EXIT = 'exit';
+
+})();
+
+
+// #EventTarget
 (function() {
     'use strict';
 
     var EventTarget = ADUN.EventTarget = ADUN.Class({
-        TYPE: 'EventTarget',
         EXTEND: null,
 
         init: function() {
@@ -604,6 +656,40 @@
     });
 })();
 
+// #InputManager
+(function() {
+    'use strict';
+
+    var InputManager = ADUN.inputManager = ADUN.Class({
+        EXTEND: ADUN.EventTarget,
+
+        init: function(valueStore, source) {
+            this.super();
+
+            // event target을 저장하는 배열
+            this.broadcastTarget = [];
+
+            //
+            this.valueStore = valueStore;
+
+            this.source = source || this;
+
+            this._binds = {};
+
+            this._stateHandler = function(e) {
+                var id = e.source.identifier;
+                var name = this._binds[id];
+                this.changeState(name, e.data);
+            }.bind(this);
+        },
+
+        bind: function(inputSource, name) {
+
+        }
+    })
+
+})();
+
 
 // #heart
 (function() {
@@ -611,7 +697,6 @@
     var INSTANCE  = null;
 
     var Heart = ADUN.Heart = ADUN.Class({
-        TYPE: 'Heart',
         EXTEND: ADUN.EventTarget,
 
         init: function(id, height, width) {
@@ -736,7 +821,7 @@
     };
 
     Asset.load = function(src, alias, callback, onerror) {
-        var assetName, tempCallback, file;
+        var assetName, tempCallback, ext;
         if( ADUN.Utils.isString(arguments[1]) ) {
             assetName = alias;
             callback = callback || function() { };
@@ -748,9 +833,195 @@
             onerror = tempCallback || function() { };
         }
 
-        file = ADUN.findExtention(src);
+        ext = ADUN.findExtention(src);
+
+        return ADUN.Deferred.next(function() {
+            var d = new ADUN.Deferred();
+            var _callback = function(e) {
+                d.call(e);
+                callback.call(this, e);
+            };
+            var _onerror = function(e) {
+                d.fail(e);
+                onerror.call(this, e);
+            };
+
+        });
 
     }
+})();
+
+// #Matrix
+(function() {
+    'use strict';
+
+    /**
+     * Matrix
+     * 2D 변환 행렬을 나타낸다.
+     * 다른 좌표 공간 사이에서
+     *
+     *
+     *
+     * stack[0] = a = 1 => 행렬(0, 0) => scale과 rotate에 영향을 준다.
+     * stack[1] = b = 0 => 행렬(0, 1) => scale과 roate에 영향을 준다.
+     * stack[2] = c = 0 => 행렬(1, 0) => scale과 roate에 영향을 준다.
+     * stack[3] = d = 1 => 행렬(1, 1) => scale과 roate에 영향을 준다.
+     * stack[4] = tx = 0 => 행렬(2, 0) => x축 변환에 영향을 준다.
+     * stack[5] = ty = 0 => 행렬(2, 1) => y축 변환에 영향을 준다.
+     *
+     *
+     *
+     * [k  0] [x]    =>[kx]
+     * [0  k] [y]    =>[ky]    k배 확대 닮은 변환 행렬
+     *
+     *
+     * [1  0][x]     =>[x]
+     * [0 -1][y]     =>[-y]   x축 대칭 행렬
+     *
+     *
+     * [-1 0][x]     =>[-x]
+     * [0  1][y]     =>[y]    y축 대칭 행렬
+     *
+     *
+     * [-1 0][x]     => [-x]
+     * [0 -1][y]     => [-y]  원점 대칭 행렬
+     *
+     *
+     * [0  1][x]     => [y]
+     * [1  0][y]     => [x]   y=x 대칭 변환 행렬
+     *
+     *
+     * [0 -1][x]     => [-y]
+     * [-1 0][y]     => [-x]   y=-x 대칭 변환 행렬
+     *
+     *
+     * [cosΘ  -sinΘ] [x]    =>  [x']
+     * [sinΘ   cosΘ] [y]    =>  [y']   Θ만틈 회전한 회전변환 행렬
+     *
+     */
+
+
+    var Matrix = ADUN.Matrix =  ADUN.Class({
+        init: function() {
+            this.reset();
+        },
+
+        reset: function() {
+            this.stack = [];
+            this.stack.push([ 1, 0, 0, 1, 0, 0]);
+        },
+
+        makeTransformMatrix: function(node, dest) {
+            var x, y, width, height, rotation, scaleX, scaleY, theta, tmpcos, tmpsin, w, h, a, b, c, d, tx, ty;
+
+            x = node._x;
+            y = node._y;
+            width = node.width || 0;
+            height = node.height || 0;
+            rotation = node._rotation || 0;
+            scaleX = ADUN.isNumber(node._scaleX) ? node._scaleX : 1;       // (|k| > 1) => x -> k배 확대,  (k < 0) => y축 대칭
+            scaleY = ADUN.isNumber(node._scaleY) ? node._scaleY : 1;       // (|k| > 1) => y -> k백 확대,  (k < 0) => x축 대칭
+            theta = rotation * Math.PI / 180;
+            tmpcos = Math.cos(theta);                           // Math.cos(0) == 1
+            tmpsin = Math.sin(theta);                           // Math.sin(0) == 0
+            w = ADUN.isNumber(node._originX) ? node._originX : (width / 2);
+            h = ADUN.isNumber(node._originY) ? node._originY : (height / 2);
+
+            a = scaleX * tmpcos;
+            b = scaleX * tmpsin;
+            c = scaleY * tmpsin;
+            d = scaleY * tmpcos;
+
+            dest[0] = a;
+            dest[1] = b;
+            dest[2] = -c;
+            dest[3] = d;
+            dest[4] = (-a * w + c * x + w);
+            dest[5] = (-b * w + d * y + h);
+        }
+    })
+
+})();
+
+
+// #Node
+(function() {
+    // 씬 안에서의 보여지는 모든 객체의 부모이다.
+    var Node = ADUN.Node = ADUN.Class({
+        EXTEND: ADUN.EventTarget,
+
+        init: function() {
+            this.super();
+
+            this._dirty = false;
+
+            this._matrix = [1, 0, 0, 1, 0, 0];
+
+            this._x = 0;
+            this._y = 0;
+            this._offsetX = 0;
+            this._offsetY = 0;
+
+            // Event.ENTER_FRAME 이벤트마다 1씩 증가한다.
+            this.age = 0;
+
+            this.parentNode = null;
+
+            this.scene = null;
+
+
+            Object.defineProperties(this, {
+                x: {
+                    get: function() {
+                        return this._x;
+                    },
+                    set: function(x) {
+                        if(this._x !== x) {
+                            this._x = x;
+                            this._dirty = true;
+                        }
+                    }
+                },
+
+                y: {
+                    get: function() {
+                        return this._y;
+                    },
+                    set: function(y) {
+                        if(this._y !== y) {
+                            this._y = y;
+                            this._dirty = true;
+                        }
+                    }
+                }
+            });
+        },
+
+        moveTo: function(x, y) {
+            this.x = x;
+            this.y = y;
+        },
+
+        moveBy: function(x, y) {
+            this.x += x;
+            this.y += y;
+        },
+
+        _updateCoordinate: function() {
+            var node = this;
+            var tree = [ node ];
+            var parent  = node.parentNode;
+            var scene = this.scene;
+
+            while( parent && node._dirty ) {
+                tree.unshift(parent);
+                node = node.parentNode;
+                parent = node.parentNode;
+            }
+
+        }
+
+    })
 })();
 
 
