@@ -903,6 +903,13 @@
      * [cosΘ  sinΘ] [x]    =>  [x']
      * [-sinΘ cosΘ] [y]    =>  [y']   Θ만틈 시계 방향으로 회전한 회전변환 행렬
      *
+     *
+     *
+     * [a, c, tx]
+     * [b, d, ty]
+     *
+     * [1, 0, 0]
+     * [0, 1, 1]
      */
 
 
@@ -912,21 +919,22 @@
             this.reset();
         },
 
-        reset: function(a, b, c, d, tx, ty) {
+        reset: function() {
+           /**
+            * [a    b    tx]
+            * [c    d    ty]
+            *
+            * [1    0    0]
+            * [0    1    0]
+            */
+
             this.stack = [];
-            this.stack.push([
-                1, 0,
-                0, 1,
-                0, 0
-            ]);
+            this.stack.push([ 1, 0, 0, 0, 1, 0 ]);
         },
 
         makeTransformMatrix: function(node, dest) {
             var x, y, width, height, w, h, rotation, scaleX, scaleY, theta, tmpcos, tmpsin,
-
-                 a, b,
-                 c, d,
-                tx, ty;
+                a, b, c, d, tx, ty;
 
             x = node._x;
             y = node._y;
@@ -934,35 +942,27 @@
             height = node.height || 0;
             w = ( ADUN.isNumber(node._originX) ) ? node._originX : width / 2;
             h = ( ADUN.isNumber(node._originY) ) ? node._originY : height / 2;
-            scaleX = ( ADUN.isNumber(node._scaleX) ) ? node._scaleX : 1;           // (|k| > 1) => x -> k배 확대,  (k < 0) => y축 대칭
-            scaleY = ( ADUN.isNumber(node._scaleY) ) ? node._scaleY : 1;           // (|k| > 1) => y -> k백 확대,  (k < 0) => x축 대칭
+            scaleX = ( ADUN.isNumber(node._scaleX) ) ? node._scaleX : 1;
+            scaleY = ( ADUN.isNumber(node._scaleY) ) ? node._scaleY : 1;
             rotation = node._rotation || 0;
             theta = rotation * Math.PI / 180;
             tmpcos = Math.cos(theta);
             tmpsin = Math.sin(theta);
-
-            a = scaleX * tmpcos;  b = scaleX * tmpsin;
-            c = scaleY * tmpsin;  d = scaleY * tmpcos;
-            tx = '';              ty = '';
-
-            dest[0] = a;    dest[1] = b;
-            dest[2] = c;    dest[3] = d;
-            dest[4] = tx;   dest[5] = ty;
-
         },
 
         multiply: function(m1, m2, dest) {
-            var a11 = m1[0], a12 = m1[1], adx = m1[4];
-            var a21 = m1[2], a22 = m1[3], ady = m1[5];
-            var b11 = m2[0], b12 = m2[1], bdx = m2[4];
-            var b21 = m2[2], b22 = m2[3], bdy = m2[5];
+            var a11 = m1[0], a12 = m1[1], atx = m1[2];
+            var a21 = m1[3], a22 = m1[4], aty = m1[5];
 
-            var c11 = a11 * b11 + a12 * b21,    c12 = a11 * b12 + a12 * b22;
-            var c21 = a21 * b11 + a22 * b21,    c22 = a21 * b12 + a22 * b22;
-
-            dest[0] = c11; dest[1] = c12;
-            dest[2] = c21; dest[3] = c22;
+            var b11 = m2[0], b12 = m2[1], btx = m2[2];
+            var b21 = m2[3], b22 = m2[4], bty = m2[5];
+//quintus.js
+            dest[0] = a11 * b11 + a12 * b21; dest[1] = a11 * b12 + a12 * b22; dest[2] = a11 * btx + a12 * bty + atx;
+            dest[3] = a21 * b12 + a22 * b22; dest[4] = a21 * b12 + a22 * b22; dest[5] = a21 * btx + a22 * bty + aty;
         }
+
+
+
 
     });
 
