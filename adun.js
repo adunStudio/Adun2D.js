@@ -787,6 +787,7 @@
 
 
 
+
     })
 
 })();
@@ -869,7 +870,8 @@
      * stack[4] = tx = 0 => 행렬(2, 0) => x축 변환에 영향을 준다.
      * stack[5] = ty = 0 => 행렬(2, 1) => y축 변환에 영향을 준다.
      *
-     *
+     * [x  x]
+     * [y  y]
      *
      * [k  0] [x]    =>[kx]
      * [0  k] [y]    =>[ky]    k배 확대 닮은 변환 행렬
@@ -896,50 +898,73 @@
      *
      *
      * [cosΘ  -sinΘ] [x]    =>  [x']
-     * [sinΘ   cosΘ] [y]    =>  [y']   Θ만틈 회전한 회전변환 행렬
+     * [sinΘ   cosΘ] [y]    =>  [y']   Θ만틈 반시계 방향으로 회전한 회전변환 행렬
+     *
+     * [cosΘ  sinΘ] [x]    =>  [x']
+     * [-sinΘ cosΘ] [y]    =>  [y']   Θ만틈 시계 방향으로 회전한 회전변환 행렬
      *
      */
 
 
-    var Matrix = ADUN.Matrix =  ADUN.Class({
+    var Matrix = ADUN.Matrix = ADUN.Class({
+
         init: function() {
             this.reset();
         },
 
-        reset: function() {
+        reset: function(a, b, c, d, tx, ty) {
             this.stack = [];
-            this.stack.push([ 1, 0, 0, 1, 0, 0]);
+            this.stack.push([
+                1, 0,
+                0, 1,
+                0, 0
+            ]);
         },
 
         makeTransformMatrix: function(node, dest) {
-            var x, y, width, height, rotation, scaleX, scaleY, theta, tmpcos, tmpsin, w, h, a, b, c, d, tx, ty;
+            var x, y, width, height, w, h, rotation, scaleX, scaleY, theta, tmpcos, tmpsin,
+
+                 a, b,
+                 c, d,
+                tx, ty;
 
             x = node._x;
             y = node._y;
             width = node.width || 0;
             height = node.height || 0;
+            w = ( ADUN.isNumber(node._originX) ) ? node._originX : width / 2;
+            h = ( ADUN.isNumber(node._originY) ) ? node._originY : height / 2;
+            scaleX = ( ADUN.isNumber(node._scaleX) ) ? node._scaleX : 1;           // (|k| > 1) => x -> k배 확대,  (k < 0) => y축 대칭
+            scaleY = ( ADUN.isNumber(node._scaleY) ) ? node._scaleY : 1;           // (|k| > 1) => y -> k백 확대,  (k < 0) => x축 대칭
             rotation = node._rotation || 0;
-            scaleX = ADUN.isNumber(node._scaleX) ? node._scaleX : 1;       // (|k| > 1) => x -> k배 확대,  (k < 0) => y축 대칭
-            scaleY = ADUN.isNumber(node._scaleY) ? node._scaleY : 1;       // (|k| > 1) => y -> k백 확대,  (k < 0) => x축 대칭
             theta = rotation * Math.PI / 180;
-            tmpcos = Math.cos(theta);                           // Math.cos(0) == 1
-            tmpsin = Math.sin(theta);                           // Math.sin(0) == 0
-            w = ADUN.isNumber(node._originX) ? node._originX : (width / 2);
-            h = ADUN.isNumber(node._originY) ? node._originY : (height / 2);
+            tmpcos = Math.cos(theta);
+            tmpsin = Math.sin(theta);
 
-            a = scaleX * tmpcos;
-            b = scaleX * tmpsin;
-            c = scaleY * tmpsin;
-            d = scaleY * tmpcos;
+            a = scaleX * tmpcos;  b = scaleX * tmpsin;
+            c = scaleY * tmpsin;  d = scaleY * tmpcos;
+            tx = '';              ty = '';
 
-            dest[0] = a;
-            dest[1] = b;
-            dest[2] = -c;
-            dest[3] = d;
-            dest[4] = (-a * w + c * x + w);
-            dest[5] = (-b * w + d * y + h);
+            dest[0] = a;    dest[1] = b;
+            dest[2] = c;    dest[3] = d;
+            dest[4] = tx;   dest[5] = ty;
+
+        },
+
+        multiply: function(m1, m2, dest) {
+            var a11 = m1[0], a12 = m1[1], adx = m1[4];
+            var a21 = m1[2], a22 = m1[3], ady = m1[5];
+            var b11 = m2[0], b12 = m2[1], bdx = m2[4];
+            var b21 = m2[2], b22 = m2[3], bdy = m2[5];
+
+            var c11 = a11 * b11 + a12 * b21,    c12 = a11 * b12 + a12 * b22;
+            var c21 = a21 * b11 + a22 * b21,    c22 = a21 * b12 + a22 * b22;
+
+            dest[0] = c11; dest[1] = c12;
+            dest[2] = c21; dest[3] = c22;
         }
-    })
+
+    });
 
 })();
 
