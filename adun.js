@@ -27,7 +27,7 @@
 
 
     var ADUN =  {
-        VERSION: '0.0.1'
+        ADUN_VERSION: '0.0.1'
     };
 
     global.ADUN = global.Adun = global.adun = ADUN;
@@ -285,7 +285,7 @@
 
     var ENV = ADUN.ENV = {
 
-        VERSION: ADUN.VERSION,
+        VERSION: ADUN.ADUN_VERSION,
 
         // 사용자 브라우저
         BROWSER: (function(ua) {
@@ -934,7 +934,7 @@
 
         makeTransformMatrix: function(node, dest) {
             var x, y, width, height, w, h, rotation, scaleX, scaleY, theta, tmpcos, tmpsin,
-                a, b, c, d, tx, ty;
+                a11, a12, a21, a22, atx, aty;
 
             x = node._x;
             y = node._y;
@@ -942,12 +942,18 @@
             height = node.height || 0;
             w = ( ADUN.isNumber(node._originX) ) ? node._originX : width / 2;
             h = ( ADUN.isNumber(node._originY) ) ? node._originY : height / 2;
-            scaleX = ( ADUN.isNumber(node._scaleX) ) ? node._scaleX : 1;
-            scaleY = ( ADUN.isNumber(node._scaleY) ) ? node._scaleY : 1;
+            scaleX = ( ADUN.isNumber(node._scaleX) ) ? node._scaleX : 1;          // (|k| > 1) => x -> k배 확대,  (k < 0) => y축 대칭
+            scaleY = ( ADUN.isNumber(node._scaleY) ) ? node._scaleY : 1;          // (|k| > 1) => y -> k백 확대,  (k < 0) => x축 대칭
             rotation = node._rotation || 0;
             theta = rotation * Math.PI / 180;
-            tmpcos = Math.cos(theta);
-            tmpsin = Math.sin(theta);
+            tmpcos = Math.cos(theta);            // Math.cos(0) == 1
+            tmpsin = Math.sin(theta);            // Math.sin(0) == 0
+
+            a11 = scaleX * tmpcos; a12 = scaleX * tmpsin; atx = -a11 * w + a21* h + x + w;
+            a21 = scaleY * tmpsin; a22 = scaleY * tmpcos; aty = -a12 * w - a22 * h + y + h;
+
+            dest[0] =  a11; dest[1] = a12; dest[2] = atx;
+            dest[3] = -a21; dest[4] = a22; dest[5] = aty;
         },
 
         multiply: function(m1, m2, dest) {
@@ -956,16 +962,14 @@
 
             var b11 = m2[0], b12 = m2[1], btx = m2[2];
             var b21 = m2[3], b22 = m2[4], bty = m2[5];
-//quintus.js
+
             dest[0] = a11 * b11 + a12 * b21; dest[1] = a11 * b12 + a12 * b22; dest[2] = a11 * btx + a12 * bty + atx;
             dest[3] = a21 * b12 + a22 * b22; dest[4] = a21 * b12 + a22 * b22; dest[5] = a21 * btx + a22 * bty + aty;
-        }
-
-
-
-
+        },
     });
 
+
+    ADUN.Matrix.instance = new Matrix();
 })();
 
 
@@ -980,7 +984,7 @@
 
             this._dirty = false;
 
-            this._matrix = [1, 0, 0, 1, 0, 0];
+            this._matrix = [1, 0, 0, 0, 1, 0];
 
             this._x = 0;
             this._y = 0;
@@ -1044,9 +1048,221 @@
                 parent = node.parentNode;
             }
 
+            var matrix = ADUN.Matrix.instance;
+            var stack = matrix.stack;
+            var mat = [];
+            var newmat, ox, oy;
+
+            stack.push(tree[0]._matrix);
+
+            for(var i = 1, length = tree.length; i < length; ++i) {
+                node = tree[i];
+                newmat = [];
+                matrix.makeTransformMatrix(node, mat);
+                matrix.multiply(stack[stack.length - 1], mat, newmat) ;
+                node._matrix = newmat;
+                stack.push(newmat);
+
+                // ....
+            }
+        },
+
+        remove: function() {
+            if( this.parentNode ) {
+                this.parentNode.removeChild(this);
+            }
+
+            if( this.childNodes ) {
+                var i, childNodes = this.childNodes.slice();
+                for( i = childNodes.length -1; i >= 0; --i ) {
+                    childNodes[i].remove();
+                }
+            }
+
+            this.clearEventListener();
         }
 
     })
+})();
+
+(function() {
+    'use strict';
+
+    var Entity = ADUN.Entity = ADUN.Class({
+        EXTEND: ADUN.Node,
+
+        init: function() {
+            var heart = ADUN.Heart.instance;
+
+            this.super();
+
+            this._rotation = 0;
+            this._scaleX = 1;
+            this._scaleY = 1;
+
+            this._clipping = false;
+
+            this._originX = null;
+            this._originY = null;
+
+            this._width = 0;
+            this._height = 0;
+            this._backgroundColor = null;
+            this._opacity = 1;
+            this._visible = true;
+
+
+            Object.defineProperties(this, {
+                rotation: {
+                    get: function() {
+                        return this._rotation;
+                    },
+                    set: function(rotation) {
+                        if (this._rotation !== rotation ) {
+                            this._rotation = rotation;
+                            this._dirty = true;
+                        }
+                    }
+                },
+
+                originX: {
+                    get: function() {
+                        return this._originX;
+                    },
+                    set: function(originX) {
+                        if ( this._originX !== originX ) {
+                            this._originX = originX;
+                            this._dirty = true;
+                        }
+                    }
+                },
+
+                originY: {
+                    get: function() {
+                        return this._originY;
+                    },
+                    set: function(originY) {
+                        if ( this._originY !== originY ) {
+                            this._originY = originY;
+                            this._dirty = true;
+                        }
+                    }
+                },
+
+                width: {
+                    get: function() {
+                        return this._width;
+                    },
+                    set: function(width) {
+                        if(this._width !== width) {
+                            this._width = width;
+                            this._dirty = true;
+                        }
+                    }
+                },
+
+                height: {
+                    get: function() {
+                        return this._height;
+                    },
+                    set: function(heigth) {
+                        if(this._height !== height) {
+                            this._height = height;
+                            this._dirty = true;
+                        }
+                    }
+                },
+
+                backgroundColor: {
+                    get: function() {
+                        return this._backgroundColor;
+                    },
+                    set: function(color) {
+                        this._backgroundColor = color;
+                    }
+                },
+
+                opacity: {
+                    get: function() {
+                        return this._opacity;
+                    },
+                    set: function(opacity) {
+                        this._opactiy = parseFloat(opacity);
+                    }
+                },
+
+                visible: {
+                    get: function() {
+                        return this._visible;
+                    },
+                    set: function(visible) {
+                        this._visible = visible;
+                    }
+                }
+            });
+
+        },
+
+        scale: function(x, y) {
+            this._scaleX *= x;
+            this._scaleY *= ( y != null )  ? y : x;
+            this._dirty = true;
+        },
+
+        rotate: function(deg) {
+            this.rotation += deg;
+        }
+    });
+})();
+
+(function() {
+    'use strict';
+
+    var Sprite = ADUN.Sprite = ADUN.Class({
+        EXTEND: ADUN.Entity,
+
+        init: function(width, heigh) {
+            this.super();
+
+            this.width = width;
+            this.height = height;
+
+            this._image = null;
+            this._frameLeft = 0;
+            this._frameTop = 0;
+            this._frame = 0;
+            this._frameSequence = null;
+
+            Object.defineProperties(this, {
+                image: {
+                    get: function() {
+                        return this._image;
+                    },
+                    set: function(image) {
+                        if( image != null ) {
+                            throw new Error('image is undefined')
+                        }
+                        if( image == this._image ) {
+                            return;
+                        }
+
+                        this._image = image;
+                        this._computeFramePosition();
+                    }
+                }
+            });
+
+        },
+
+        _computeFramePosition: function() {
+            var row, image = this._image;
+
+            if(image != null) {
+                row = image.width / this._width | 0;
+
+            }
+        }
+    });
 })();
 
 
