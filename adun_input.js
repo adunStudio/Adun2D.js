@@ -8,16 +8,16 @@
        init: function (valueStore, source) {
            this.super();
 
-           // ÀÌº¥Æ® Å¸°ÙÀ» ÀúÀåÇÏ´Â ¹è¿­
+           // ì´ë²¤íŠ¸ íƒ€ê²Ÿì„ ì €ì¥í•˜ëŠ” ë°°ì—´
            this.boardcastTarget = [];
 
-           // valueStore[³×ÀÓ] => ÀÎÇ² »óÅÂ¸¦ ÂüÁ¶ÇÏ´Â °´Ã¼
+           // valueStore[ë„¤ì„] => ì¸í’‹ ìƒíƒœë¥¼ ì°¸ì¡°í•˜ëŠ” ê°ì²´
            this.valueStore = valueStore;
 
-           // ¼Ò½º´Â e °´Ã¼¿¡ ÀÇÇØ¼­ Ãß°¡µÈ´Ù.
+           // ì†ŒìŠ¤ëŠ” e ê°ì²´ì— ì˜í•´ì„œ ì¶”ê°€ëœë‹¤.
            this.source = source || this;
 
-           // _binds[ÀÎÇ²¼Ò½º.id] = name
+           // _binds[ì¸í’‹ì†ŒìŠ¤.id] = name
            this._binds = {};
 
            this._stateHandler = function (e) {
@@ -162,3 +162,5 @@
         }
     });
 })();
+
+// dtd
