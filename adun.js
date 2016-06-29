@@ -20,14 +20,15 @@
 
 
 
-//# ADUN NAMESPACE
+//#ADUN NAMESPACE
 (function(global){
     'use strict';
 
 
 
     var ADUN =  {
-        ADUN_VERSION: '0.0.1'
+        ADUN_VERSION: '0.0.1'  ,
+        name: 'odu'
     };
 
     global.ADUN = global.Adun = global.adun = ADUN;
@@ -123,22 +124,6 @@
         return target;
 
     };
-
-    if( typeof Function.prototype.bind !== 'function' ) {
-        Function.prototype.bind = function(thisObject) {
-            var func = this;
-            var args = Array.prototype.slice.call(arguments, 1);
-            var Nop = function() { };
-            var bound = function() {
-                var a = args.concat(Array.prototype.slice.call(arguments));
-                return func.apply(this instanceof Nop ? this : thisObject || window, a);
-            };
-            Nop.prototype = func.prototye;
-            bound.prototye = new Nop();
-            return bound;
-        }
-    }
-
 
     // 파일 확장자 찾기
     ADUN.findExtention = function(path) {
@@ -346,7 +331,12 @@
             87: 'w',
             69: 'e',
             82: 'r'
-        }
+        },
+
+        CANVAS_METHODS: [
+            'putImageData', 'drawImage', 'drawFocusRing', 'fill', 'stroke',
+            'clearRect', 'fillRect', 'strokeRect', 'fillText', 'strokeText'
+        ]
     }
 })();
 
@@ -580,15 +570,8 @@
         }
     });
 
-    Event.LOAD = 'load';
-    Event.ERROR = 'error';
     Event.HEART_RESIZE = 'heartresize';
-    Event.PROGRESS = 'progress';
-    Event.ENTER_FRAME = 'enterframe';
-    Event.EXIT_FRAME = 'exitframe';
-    Event.ENTER = 'enter';
-    Event.EXIT = 'exit';
-
+    Event.INPUT_STATE_CHANGED = 'inputstatechanged';
 })();
 
 
@@ -610,7 +593,7 @@
 
             // 리스너 목록이 없다면 IF 블록에 진입.
             if( ADUN.Utils.isUndefined(listeners) ) {
-                this.listeners[type] = [listener];
+                this._listeners[type] = [listener];
 
             } else if( listener.indexOf(listener) === -1 ) {
                 // 리스너 목록 맨 앞에 추가.
@@ -621,6 +604,19 @@
         // on == addEventListener
         on: function() {
             this.addEventListener.apply(this, arguments);
+        },
+
+        removeEventListener: function(type, listener) {
+            var listeners, i;
+
+            listeners = this._listeners[type];
+            if( !ADUN.isUndefined(listener) ) {
+                i = listener.indexOf(listener);
+
+                if( i !== -1 ) {
+                    listener.splice(i, 1);
+                }
+            }
         },
 
         clearEventListener: function(type) {
@@ -635,13 +631,15 @@
 
         dispatchEvent: function(e) {
             e.target = this;
+            e.loaclX = e.x - this._offsetX;
+            e.localY = e.y - this._offsetY;
 
             if( !ADUN.Utils.isUndefined(this['on' + e.type]) ) {
                 this['on' + e.type](e);
             }
 
             var listeners = this._listeners[e.type];
-            if( !ADUN.Utils.isUndefined(listeners[e.type]) ) {
+            if( !ADUN.Utils.isUndefined(listeners) ) {
                 listeners = listeners.slice();
                 for(var i = 0, len = listeners.length; i < len; ++i) {
                     listeners[i].call(this, e);
@@ -654,202 +652,6 @@
             this.dispatchEvent.call(this, e);
         }
     });
-})();
-
-// #InputManager
-(function() {
-    'use strict';
-
-    var InputManager = ADUN.inputManager = ADUN.Class({
-        EXTEND: ADUN.EventTarget,
-
-        init: function(valueStore, source) {
-            this.super();
-
-            // event target을 저장하는 배열
-            this.broadcastTarget = [];
-
-            //
-            this.valueStore = valueStore;
-
-            this.source = source || this;
-
-            this._binds = {};
-
-            this._stateHandler = function(e) {
-                var id = e.source.identifier;
-                var name = this._binds[id];
-                this.changeState(name, e.data);
-            }.bind(this);
-        },
-
-        bind: function(inputSource, name) {
-
-        }
-    })
-
-})();
-
-
-// #heart
-(function() {
-    'use strict';
-    var INSTANCE  = null;
-
-    var Heart = ADUN.Heart = ADUN.Class({
-        EXTEND: ADUN.EventTarget,
-
-        init: function(id, height, width) {
-            if( window.document.body == null ) { throw new Error("document.body is null. Please excute 'new ADUN.Heart()' in window.onload. (ADUN.Heart)"); }
-
-            // 싱글톤
-            if ( INSTANCE ) { throw new Error("Instances of Heart shall be only one. (ADUN.Heart)"); }
-
-            var stage = document.getElementById(id);
-            if( !stage ) { throw new Error("main canvas is undefined (ADUN.Heart)"); }
-
-
-            this.super();
-
-            INSTANCE = ADUN.Heart.instance = this;
-
-            this._calledTime = 0;
-            this._mouseDownID = 0;
-            this._surfaceID = 0;
-            this._soundID = 0;
-
-            this._scenes = [];
-
-            width = width || 320;
-            height = height || 320;
-
-            var style, scale, sWidth, sHeight;
-            style = window.getComputedStyle(stage) || stage.currentStyle;
-            sWidth = parseInt(style.width, 10);
-            sHeight = parseInt(style.height, 10);
-
-            if(sWidth && sHeight) {
-                scale = Math.min(sWidth / width, sHeight / height);
-            }
-
-            stage.style.position = 'relative';
-
-            var bounding = stage.getBoundingClientRect();
-            this._pageX = Math.round(window.scrollX || window.pageXOffset + bounding.left);
-            this._pageY = Math.round(window.scrollY || window.pageYOffset + bounding.top);
-
-            stage.style.fontSize = '12px';
-            stage.style.webkitTextSizeAdjust = 'none';
-            stage.style.webkitTapHighlightColor = 'rgba(0, 0, 0, 0)';
-            this._canvas = stage;
-
-            this._width = width;
-            this._height = height;
-            this.scale = scale;
-
-            this.fps = 30;
-
-            this.frame = 0;
-
-            this.ready = false;
-
-            this.running = false;
-
-            this.assets = {};
-
-
-
-        },
-
-
-
-        preLoad: function(assets) {
-            var name, ASSETS = [];
-            if( !ADUN.Utils.isArray(assets) ) {
-                if( ADUN.Utils.isObject(assets) ) {
-                    for(name in assets) {
-                        if( ADUN.has(assets, name) ) {
-                            ASSETS.push([assets[name], name]);
-                        }
-                    }
-                    assets = ASSETS;
-                } else {
-                    assets = Array.prototype.slice.call(arguments);
-                }
-            }
-
-            Array.prototype.push.apply(this._pre, assets);
-            return this;
-        },
-
-
-
-
-
-
-
-    })
-
-})();
-
-
-// # ASSET
-(function() {
-    'use strict';
-
-    var Asset = ADUN.Asset = {};
-
-    Asset._pre = ADUN._pre = [];
-    Asset._assets = ADUN._assets = [];
-
-    Asset.asset = function(assets) {
-        var name, ASSETS = [];
-
-        if( !ADUN.Utils.isArray(assets) ) {
-            if( ADUN.Utils.isObject(assets) ) {
-                for(name in assets) {
-                    if( ADUN.has(assets, name) ) {
-                        ASSETS.push([assets[name], name]);
-                    }
-                }
-                assets = ASSETS;
-            }
-            else {
-                assets = Array.prototype.slice.call(arguments);
-            }
-        }
-        Array.prototype.push.apply(this._assets, assets);
-    };
-
-    Asset.load = function(src, alias, callback, onerror) {
-        var assetName, tempCallback, ext;
-        if( ADUN.Utils.isString(arguments[1]) ) {
-            assetName = alias;
-            callback = callback || function() { };
-            onerror = onerror || function() { };
-        } else {
-            assetName = src;
-            tempCallback = callback;
-            callback = arguments[1];
-            onerror = tempCallback || function() { };
-        }
-
-        ext = ADUN.findExtention(src);
-
-        return ADUN.Deferred.next(function() {
-            var d = new ADUN.Deferred();
-            var _callback = function(e) {
-                d.call(e);
-                callback.call(this, e);
-            };
-            var _onerror = function(e) {
-                d.fail(e);
-                onerror.call(this, e);
-            };
-
-        });
-
-    }
 })();
 
 // #Matrix
@@ -1085,6 +887,7 @@
     })
 })();
 
+// #Entity
 (function() {
     'use strict';
 
@@ -1249,19 +1052,281 @@
                         this._image = image;
                         this._computeFramePosition();
                     }
+                },
+
+                width: {
+                    get: function() {
+                        return this._width;
+                    },
+                    set: function(width) {
+                        this._width = width;
+                        this._computeFramePosition();
+                        this._dirty = true;
+                    }
+                },
+
+                height:{
+                    get: function() {
+                        return this._height;
+                    },
+                    set: function(height) {
+                        this._height = height;
+                        this._computeFramePosition();
+                        this._dirty = true;
+                    }
                 }
             });
 
         },
 
         _computeFramePosition: function() {
-            var row, image = this._image;
+            var col, image = this._image;
 
-            if(image != null) {
-                row = image.width / this._width | 0;
+            if( image != null ) {
+                col = image.width / this._width | 0;      // -> or 연산자 (정수 반환)
+                this._frameLeft = (this._frame % col | 0) * this._width;
+                this._frameTop = (this._frame / col | 0) * this._height % image.height;
+            }
+        },
 
+        render: function(ctx) {
+            var image, w, h, iw, ih, elem, sx, sy, sw, sh;
+
+            image = this._image;
+            w = this._width;
+            h = this._height;
+
+            if( image && w !== 0 && h !== 0 ) {
+                iw = image.width;
+                ih = image.height;
+                if( iw < w || ih < h) {
+                    ctx.fillStyle = ADUN.Surface._getPattern(image);
+                    ctx.fillRect(0, 0, w, h);
+                } else {
+                    elem = image._element;
+                    sx = this._frameLeft;
+                    sy = Math.min(this._frameTop, ih - h);
+                    sw = Math.max(0.01, Math.min(iw - sx, w));
+                    sh = Math.max(0.01, Math.min(ih - sy, h));
+
+                    ctx.drawImage(elem, sx, sy, sw, sh, 0, 0, w, h);
+                }
             }
         }
+    });
+})();
+
+
+// #Surface
+(function() {
+    'use strict';
+
+    var Surface = ADUN.Surface = ADUN.Class({
+        EXTEND: ADUN.EventTarget,
+
+        init: function(width, height) {
+            this.super();
+
+            var heart = ADUN.Heart.instance;
+
+            this.width = Math.ceil(width);
+            this.height = Math.ceil(height);
+
+            this.context = null;
+
+            this._element = document.createElement('canvas');
+            this._element.width = width;
+            this._element.height = height;
+            this._element.style.position = 'absolute';
+
+            this.context = this._element.getContext('2d');
+
+            ADUN.ENV.CANVAS_METHODS.forEach(function(name) {
+                console.log(this);
+                var method = this.context[name];
+                this.context[name] = function() {
+                    method.apply(this, arguments);
+                    this._dirty = true;
+                }
+            }, this);
+        },
+
+        getPixel: function(x, y) {
+            return this.context.getImageData(x, y, 1, 1).data;
+        },
+
+        setPixel: function(x, y, r, g, b, a) {
+            var pixel = this.context.createImageData(1, 1);
+            pixel.data[0] = r;
+            pixel.data[1] = g;
+            pixel.data[2] = b;
+            pixel.data[3] = a;
+            this.context.putImageData(pixel, x, y);
+        },
+
+        clear: function() {
+            this.context.clearRect(0, 0, this.width, this.height);
+        },
+
+        draw: function(image) {
+            var args, image = image._element;
+
+            if( arguments.length === 1 ) {
+                this.context.drawImage(image, 0, 0);
+            } else {
+                args = arguments;
+                args[0] = image;
+                this.context.drawImage.apply(this.context, args);
+            }
+        },
+
+        clone: function() {
+            var clone = new ADUN.Surface(this.width, this.height);
+            clone.draw(this);
+
+            return clone;
+        },
+
+        toDataURL: function() {
+            var src = this._element.src;
+
+            if( src ) {
+                if( src.slice(0, 5) === 'data:' ) {
+                    return src;
+                } else {
+                    return this.clone().toDataURL();
+                }
+            } else {
+                return this._element.toDataURL();
+            }
+        }
+    });
+
+    Surface._staticCanvas2DContext = document.createElement('canvas').getContext('2d');
+
+    Surface._getPattern = function(surface, force) {
+        if( !surface._pattern || force ) {
+            surface._pattern = this._staticCanvas2DContext.createPattern(surface._element, 'repeat');
+        }
+
+        return surface._pattern;
+    }
+})();
+
+
+// ADUN.js 의 심장
+// #Heart
+(function() {
+    var H;
+
+    var Heart = ADUN.Heart= ADUN.Class({
+        EXTEND: ADUN.EventTarget,
+
+        init: function(width, height) {
+
+            if( window.document.body === null ) {
+                throw new Error("documet.body is null. Please excute 'new Heart()' in window.onload (ADUN.Heart)");
+            }
+
+            var initial = true;
+
+            // 이미 심장이 있다면 블록안에 진입
+            if( H ) {
+                //throw new Error("ADUN.HEART instance already Exist (ADUN.Heart)");
+                initial = false;
+                Heart.stop();
+            }
+
+            this.super();
+
+            H = ADUN.Heart.instance = this;
+
+            this._calledTime = 0;
+            this._mouseDownID = 0;
+            this._surfaceID = 0;
+            this._soundID = 0;
+
+            this._scenes = [];
+
+            width = width || 320;
+            height = height || 320;
+
+            var stage, scale, sWidth, sHeight;
+
+            stage = document.createElement('div');
+            stage.id = 'ADUN_stage';
+            stage.position = 'absolute';
+
+            if(document.body.firstChild) {
+                document.body.insertBefore(stage, document.body.firstChild);
+            } else {
+                document.body.appendChild(stage);
+            }
+
+            scale = Math.min(window.innerWidth / width, window.innerHeight / height);
+
+            this._pageX = stage.getBoundingClientRect().left;
+            this._pageY = stage.getBoundingClientRect().top;
+
+            stage.style.fontSize = '12px';
+            stage.style.webkitTextSizeAdjust = 'none';
+            stage.style.webkitTapHighlightColor = 'rgba(0, 0, 0, 0)';
+
+            this._element = stage;
+
+            this.on(ADUN.Event.HEART_RESIZE, this._onheartresize);
+
+            this._width = width;
+            this._height = height;
+            this.scale = scale;
+
+            // 심장의 프레임 빈도
+            this.fps = 30;
+
+            // 심장이 뛰기시작한 이래로의 프레임 수
+            this.frame = 0;
+
+            this.ready = false;
+
+            this.running = false;
+
+            this.assets = {};
+
+
+            // 현재 보여지는 씬을 가리킨다.
+            // 현재 보여지는 씬은 항상 스택의 탑이다.
+            this.currentScene = null;
+
+            // 루트 씬
+            //this.rootScene = new ADUN.Scene();
+            //this.pushScene(this.rootScene);
+
+            // 로딩 씬
+            //this.loadingScene = new ADUN.LoadingScene();
+
+            this._aactivated = false;
+
+            this._offsetX = 0;
+            this._offsetY = 0;
+
+            this.input = {};
+
+
+
+        },
+
+        _onheartresize: function(e) {
+            this._element.style.width = Math.floor(this._width * this._scale) + 'px';
+            this._element.style.height = Math.floor(this._height * this._scale) + 'px';
+
+            var scene, i, length;
+
+            for( i = 0, length = this._scene.length; i < 1; ++i ) {
+                scene = this._scene[i];
+                scene.emit(e);
+            }
+        }
+
     });
 })();
 
