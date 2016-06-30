@@ -141,6 +141,42 @@
         return null;
     };
 
+    ADUN._loadFuncs = {};
+    ADUN._loadFuncs['jpg'] =
+        ADUN._loadFuncs['jpeg'] =
+            ADUN._loadFuncs['gif'] =
+                ADUN._loadFuncs['png'] =
+                    ADUN._loadFuncs['bmp'] = function(src, ext, callback, onerror) {
+                        return ADUN.Surface.load(src, callback, onerror);
+                    };
+    ADUN._loadFuncs['mp3'] =
+        ADUN._loadFuncs['aac'] =
+            ADUN._loadFuncs['m4a'] =
+                ADUN._loadFuncs['wav'] =
+                    ADUN._loadFuncs['ogg'] = function(src, ext, callback, onerror) {
+                        return ADUN.Sound.load(src, 'audio/' + ext, callback, onerror);
+                    };
+
+    ADUN.getTime = (function() {
+        var origin = Date.now();
+
+        if( window.performance && window.performance.now ) {
+            return function() {
+                return origin + window.performance.now();
+            }
+        } else if( window.performance && window.performance.webkitNow ) {
+            return function() {
+                return origin + window.performance.now();
+            }
+        } else {
+            return function() {
+                return Date.now;
+            }
+        }
+    })();
+
+
+
 })(window);
 
 // _
@@ -332,6 +368,8 @@
             69: 'e',
             82: 'r'
         },
+
+        PREVENT_DEFAULT_KEY_TABLE: [13, 27, 32, 37, 38, 39, 40, 65, 83, 70, 81, 87, 69, 81],
 
         CANVAS_METHODS: [
             'putImageData', 'drawImage', 'drawFocusRing', 'fill', 'stroke',
@@ -570,8 +608,63 @@
         }
     });
 
+    // 심장이 준비 완료되면 발생한다.
+    // ex) 이미지 프리로딩
+    Event.Load = 'load';
+
+    // 에러가 발생하면 발생한다.
+    Event.ERROR = 'error';
+
+    // display 사이즈가 변경되면 발생한다.
     Event.HEART_RESIZE = 'heartresize';
+
+    // 심장이 로딩중일때 발생한다.
+    // ex) 각 이미지라 로딩중일때
+    Event.PROGRESS = 'progress';
+
+    // 새로운 프레임마다 발생한다. (fps_)
+    Event.ENTER_FRAME = 'enterframe';
+
+    // 프레임이 끝나면 발생난다.
+    Event.EXIT_FRAME = 'exitframe';
+
+    // 새로운 씬에  진입할때 발생한다.
+    Event.ENTER = 'enter';
+
+    // child가 Node에 추가될때 발생한다.
+    Event.CHILD_ADDED = 'childadded';
+
+    // 노드가 그룹에 추가될때 발생한다.
+    Event.ADDED = 'added';
+
+    // 노드가 씬에 추가될때 발생한다.
+    Event.ADDED_TO_SCENE = 'addedtoscene';
+
+    // child가 Node에서 제거될때 발생한다.
+    Event.CHILD_REMOVED = 'childremoved';
+
+    // 노드가 그룹에서 제거될때 발생한다.
+    Event.REMOVED = 'removed';
+
+    // 노드가 씬에서 제거될때 발생한다.
+    Event.REMOVED_FROM_SCENE = 'removedfromscene';
+
+    // Entity가 렌더될때 발생한다.
+    Event.RENDER = 'render';
+
+    // 버튼 인풋이 눌려졌을때 발생한다.
+    Event.INPUT_START = 'inputstart';
+
+    // 버튼 인풋 상태가 바겻을때 발생한다.
+    Event.INPUT_CHANGE = 'inputchange';
+
+    // 버튼 인풋이 끝나면 발생한다.
+    Event.INPUT_END = 'inputend';
+
+    // 인풋 상태가 변경되면 발생한다.
     Event.INPUT_STATE_CHANGED = 'inputstatechanged';
+
+
 })();
 
 
@@ -639,7 +732,7 @@
             }
 
             var listeners = this._listeners[e.type];
-            if( !ADUN.Utils.isUndefined(listeners) ) {
+            if( listeners != null ) {
                 listeners = listeners.slice();
                 for(var i = 0, len = listeners.length; i < len; ++i) {
                     listeners[i].call(this, e);
@@ -1132,8 +1225,6 @@
             this.width = Math.ceil(width);
             this.height = Math.ceil(height);
 
-            this.context = null;
-
             this._element = document.createElement('canvas');
             this._element.width = width;
             this._element.height = height;
@@ -1142,7 +1233,6 @@
             this.context = this._element.getContext('2d');
 
             ADUN.ENV.CANVAS_METHODS.forEach(function(name) {
-                console.log(this);
                 var method = this.context[name];
                 this.context[name] = function() {
                     method.apply(this, arguments);
@@ -1210,6 +1300,28 @@
         }
 
         return surface._pattern;
+    };
+
+    Surface.load = function(src, callback, onerror) {
+        var image = new Image();
+        image.src = src;
+        var surface = new ADUN.Surface();
+        surface.context = null;
+        surface._element = image;
+        surface.addEventListener('load', callback);
+        surface.addEventListener('error', onerror);
+        image.onerror =  function() {
+            var e = new ADUN.Event(ADUN.Event.ERROR);
+            e.message = 'Cannot load an asset: ' + image.src;
+            ADUN.Heart.instance.emit(e);
+            surface.emit(e);
+        };
+        image.onload = function() {
+            surface.width = image.width;
+            surface.height = image.height;
+            surface.emit(new ADUN.Event('load'));
+        };
+        return surface;
     }
 })();
 
@@ -1291,6 +1403,7 @@
             this.running = false;
 
             this.assets = {};
+            var assets = this._assets = [];
 
 
             // 현재 보여지는 씬을 가리킨다.
@@ -1304,15 +1417,78 @@
             // 로딩 씬
             //this.loadingScene = new ADUN.LoadingScene();
 
-            this._aactivated = false;
+            this._activated = false;
 
             this._offsetX = 0;
             this._offsetY = 0;
 
             this.input = {};
 
+            this.keyboardInputManager = new ADUN.KeyboardInputManager(window.document, this.input);
+            this.keyboardInputManager.addBroadcastTarget(this);
+
+            for( var name in ADUN.ENV.KEY_BIND_TABLE ) {
+                this.keybind(name, ADUN.ENV.KEY_BIND_TABLE[name]);
+            }
+
+            if( initial ) {
+                stage = ADUN.Heart.instance._element;
+                var evt;
+
+                document.addEventListener('keydown', function(e) {
+                    H.emit(new ADUN.Event('keydown'));
+                    if( ADUN.ENV.PREVENT_DEFAULT_KEY_TABLE.indexOf(e.keyCode) !== -1) {
+                        e.preventDefault ? e.preventDefault() : e.returnValue = false;
+                        e.stopPropagation();
+                    }
+                }, true);
+            }
 
 
+            Object.defineProperties(this, {
+                width: {
+                    get: function() {
+                        return this._width;
+                    },
+                    set: function(w) {
+                        this._width = w;
+                        this._dispatchHeartResizeEvent();
+                    }
+                },
+
+                height: {
+                    get: function() {
+                        return this._height;
+                    },
+                    set: function(h) {
+                        this._height = h;
+                        this._dispatchHeartResizeEvent();
+                    }
+                },
+
+                scale: {
+                    get: function () {
+                        return this._scale;
+                    },
+                    set: function (s) {
+                        this._scale = s;
+                        this._dispatchHeartResizeEvent();
+                    }
+                }
+
+            });
+
+
+
+
+        },
+
+        _dispatchHeartEvent: function() {
+            var e = new ADUN.Event('heartresize');
+            e.width = this._width;
+            e.height = this._height;
+            e.scale = this._scale;
+            this.emit(e);
         },
 
         _onheartresize: function(e) {
@@ -1325,11 +1501,469 @@
                 scene = this._scene[i];
                 scene.emit(e);
             }
+        },
+
+        keybind: function(key, button) {
+            this.keyboardInputManager.keybind(key, button);
+            this.addEventListener(button + 'buttondown', this._buttonListener);
+            this.addEventListener(button + 'buttonup', this._buttonListener);
+        },
+
+        _buttonListener: function(e) {
+            this.currentScene.emit(e);
+        },
+
+        preload: function(assets) {
+            var a, name;
+
+            if( !ADUN.isArray(assets) ) {
+
+                if( ADUN.isPlainObject(assets) ) {
+                    a = [];
+
+                    for( name in assets ) {
+                        if( ADUN.has(assets, name) ) {
+                            a.push([assets[name], name]);
+                        }
+                    }
+                    assets = a;
+                } else {
+                    assets = Array.prototype.slice.call(arguments);
+                }
+            }
+
+            Array.prototype.push.apply(this._assets, assets);
+
+            return this;
+        },
+
+        load: function(src, alias, callback, onerror) {
+            var assetName, tempCallback, ext;
+
+            // alias가 string 이라면 블록안에 진입
+            if( ADUN.isString(arguments[1]) ) {
+                assetName = alias;
+                callback = callback || function() { };
+                onerror = onerror || function() { };
+            } else {
+                assetName = src;
+                tempCallback = callback;
+                callback = arguments[1] || function() { };
+                onerror = tempCallback || function() { };
+            }
+
+            ext = ADUN.findExtention(src);
+
+            return ADUN.Deferred.next(function() {
+                var d = new ADUN.Deferred();
+                var _callback = function(e) {
+                    d.call(e);
+                    callback.call(this, e);
+                };
+                var _onerror = function(e) {
+                    d.fail(e);
+                    onerror.call(this, e);
+                };
+
+                if( ADUN._loadFuncs[ext] ) {
+                    ADUN.Heart.instance.assets[assetName] = ADUN._loadFuncs[ext](src, ext, _callback, _onerror);
+                } else {
+                    console.log('cannot this asset ' + ext);
+                   // throw new Error('');
+                }
+
+                return d;
+            });
+        },
+
+        start: function(deferred) {
+            var onloadTimeSetter = function() {
+                this.frame = 0;
+                this.removeEventListener('load', onloadTimeSetter);
+            };
+
+            this.addEventListener('load', onloadTimeSetter);
+
+            this.currentTime = ADUN.getTime();
+
+            this.running = true;
+            this.ready = true;
+
+            if ( !this._activated ) {
+                this.activated = true;
+            }
+
+
+
         }
 
     });
 })();
 
+
+
+// #Group
+(function() {
+    'use strict';
+    var Group = ADUN.Group = ADUN.Class({
+        EXTEND: ADUN.Node,
+
+        init: function() {
+            this.childNodes = [];
+            this.super();
+
+            this._rotation = 0;
+            this._scaleX = 1;
+            this._scaleY = 1;
+
+            this._originX = null;
+            this._originY = null;
+
+            this.__dirty = false;
+
+            [ADUN.Event.ADDED_TO_SCENE, ADUN.Event.REMOVED_FROM_SCENE]
+                .forEach(function(event) {
+                    this.addEventListener(event, function(e) {
+                        this.childNodes.forEach(function(child) {
+                            child.scene = this.scene;
+                            child.emit(e);
+                        });
+                    });
+                }, this);
+
+
+            Object.defineProperties(this, {
+                firstChild: {
+                    get: function() {
+                        return this.childNodes[0];
+                    }
+                },
+
+                lastChild: {
+                    get: function() {
+                        return this.childNodes[this.childNodes.length -1];
+                    }
+                },
+
+                rotation: {
+                    get: function() {
+                        return this._rotation;
+                    },
+                    set: function(rotation) {
+                        if( this._rotation !== rotation ) {
+                            this._rotation = rotation;
+                            this._dirty = false;
+                        }
+                    }
+                },
+
+                scaleX: {
+                    get: function() {
+                        return this._scaleX
+                    },
+                    set: function(scale) {
+                        if( this._scaleX !== scale) {
+                            this._scaleX = scale;
+                            this._dirty = false;
+                        }
+                    }
+                },
+
+                scaleY: {
+                    get: function() {
+                        return this._scaleY
+                    },
+                    set: function(scale) {
+                        if( this._scaleY !== scale) {
+                            this._scaleY = scale;
+                            this._dirty = false;
+                        }
+                    }
+                },
+
+                originX: {
+                    get: function() {
+                        return this._originX;
+                    },
+                    set: function(originX) {
+                        if(this._originX !== originX) {
+                            this._originX = originX;
+                            this._dirty = true;
+                        }
+                    }
+                },
+
+                originY: {
+                    get: function() {
+                        return this._originY;
+                    },
+                    set: function(originY) {
+                        if(this._originY !== originY) {
+                            this._originY = originY;
+                            this._dirty = true;
+                        }
+                    }
+                },
+
+                _dirty: {
+                    get: function() {
+                        return this.__dirty;
+                    },
+                    set: function(dirty) {
+                        dirty = !!dirty;
+                        this.__dirty = dirty;
+                        if( dirty ) {
+                            for( var i = 0, length = this.childNodes.length; i < length; ++i ) {
+                                this.childNodes[i]._dirty = true;
+                            }
+                        }
+                    }
+                }
+            });
+
+        },
+
+        addChild: function(node) {
+            if( node.parentNode ) {
+                node.parentNode.removeChild(node);
+            }
+
+            this.childNodes.push(node);
+            node.parentNode = this;
+
+            var childAdded = new ADUN.Event('childadded');
+            childAdded.node = node;
+            childAdded.next = null;
+            this.emit(childAdded);
+
+            if( this.scene ) {
+                node.scene = this.scene;
+                var addedToScene = new ADUN.Event('addedtoscene');
+                node.emit(addedToScene);
+            }
+        },
+
+        insertBefore: function(node, reference) {
+            if( node.parentNode ) {
+                node.parentNode.removeChild(node);
+            }
+
+            var i = this.childNodes.indexOf(reference);
+
+            if( i !== -1 ) {
+                this.childNodes.splice(i, 0, node);
+                node.parentNode = this;
+
+                var childAdded = new ADUN.Event('childadded');
+                childAdded.node = node;
+                childAdded.next = reference;
+                this.emit(childAdded);
+                node.emit(new enchant.Event('added'));
+
+                if( this.scene ) {
+                    node.scene = this.scene;
+                    var addedToScene = new ADUN.Event('addedtoscene');
+                    node.emit(addedToScene);
+                }
+            } else {
+                this.addChild(node);
+            }
+        },
+
+        removeChild: function(node) {
+            var i = this.childNodes.indexOf(node);
+
+            if( i !== -1 ) {
+                this.childNodes.splice(i, 1);
+                node.parendNode = null;
+
+                var childRemoved = new ADUN.Event('childremoved');
+                childRemoved.node = node;
+                this.emit(childRemoved);
+                node.emit(new ADUN.Event('removed'));
+
+                if( this.scene ) {
+                    node.scene = null;
+                    var removedFromScene = new ADUN.Event('removedfromscene');
+                    node.dispatchEvent(removedFromScene)
+                }
+            }
+        }
+
+
+    });
+})();
+
+
+// #Scene
+(function() {
+    'use strict';
+
+    var Scene = ADUN.Scene = ADUN.Class({
+        EXTEND: ADUN.Group,
+
+        init: function() {
+            var heart = ADUN.Heart.instance;
+
+            this.super();
+
+            this.scene = this;
+
+            this._backgroundColor = null;
+
+            this._element = doucment.createElement('div');
+            this._element.style.position = 'absolute';
+            this._element.style.overflow = 'hidden';
+            this._element.style[ADUN.ENV.VENDOR_PREFIX + 'TransformOrigin'] = '0 0';
+
+            this._layers = {};
+            this._layerPriority = [];
+
+            this.addEventListener(ADUN.Event.CHILD_ADDED, this._onchildadded);
+            this.addEventListener(ADUN.Event.CHILD_REMOVED, this._onchildremoved);
+            this.addEventListener(ADUN.Event.ENTER, this._onenter);
+            this.addEventListener(ADUN.Event.EXIT, this._onexit);
+
+            var self = this;
+
+            this._dispatchExitframe = function() {
+                var layer, name;
+                for( name in self._layers ) {
+                    layer = self._layers[name];
+                    layer.emit(new ADUN.Event(ADUN.Event.EXIT_FRAME));
+                }
+            };
+
+            this.addEventListener(ADUN.HEART_RESIZE, this._onheartresize);
+
+            this._onheartresize(heart);
+
+            Object.defineProperties(this, {
+                x: {
+                    get: function() {
+                        return this._x;
+                    },
+                    set: function(x) {
+                        this._x = x;
+                        for( var type in this._layers ) {
+                            this._layers[type].x = x;
+                        }
+                    }
+                },
+
+                y: {
+                    get: function() {
+                        return this._y;
+                    },
+                    set: function(x) {
+                        this._y = y;
+                        for( var type in this._layers ) {
+                            this._layers[type].y = y;
+                        }
+                    }
+                },
+
+                width: {
+                    get: function() {
+                        return this._width;
+                    },
+                    set: function(width) {
+                        this._width = width;
+                        for (var type in this._layers) {
+                            this._layers[type].width = width;
+                        }
+                    }
+                },
+
+                height: {
+                    get: function() {
+                        return this._height;
+                    },
+                    set: function(height) {
+                        this._height = height;
+                        for (var type in this._layers) {
+                            this._layers[type].height = height;
+                        }
+                    }
+                },
+
+                rotation: {
+                    get: function() {
+                        return this._rotation;
+                    },
+                    set: function(rotation) {
+                        this._rotation = rotation;
+                        for (var type in this._layers) {
+                            this._layers[type].rotation = rotation;
+                        }
+                    }
+                },
+
+                scaleX: {
+                    get: function() {
+                        return this._scaleX;
+                    },
+                    set: function(scaleX) {
+                        this._scaleX = scaleX;
+                        for (var type in this._layers) {
+                            this._layers[type].scaleX = scaleX;
+                        }
+                    }
+                },
+
+                scaleY: {
+                    get: function() {
+                        return this._scaleY;
+                    },
+                    set: function(scaleY) {
+                        this._scaleY = scaleY;
+                        for (var type in this._layers) {
+                            this._layers[type].scaleY = scaleY;
+                        }
+                    }
+                },
+
+                backgroundColor: {
+                    get: function() {
+                        return this._backgroundColor;
+                    },
+                    set: function(color) {
+                        this._backgroundColor = this._element.style.backgroundColor = color;
+                    }
+                },
+            });
+        },
+
+        remove: function() {
+            this.clearEventListener();
+
+            while( this.childNodes.length > 0) {
+                this.childNodes[0].remove();
+            }
+        },
+
+        onheartresize: function(e) {
+            this._element.style.width = e.width + 'px';
+            this.width = e.width;
+            this._element.style.height = e.height + 'px';
+            this.height = e.height;
+            this._element.style[ADUN.ENV.VENDOR_PREFIX + 'Transform'] = 'scale(' + e.scale + ')';
+
+            for (var type in this._layers) {
+                this._layers[type].dispatchEvent(e);
+            }
+        },
+
+        addLayer: function(type, i) {
+            var heart = ADUN.heart.instance;
+            if( this._layers[type] ) {
+                return;
+            }
+
+
+        }
+    });
+})();
 
 
 

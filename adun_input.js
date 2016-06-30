@@ -1,77 +1,79 @@
 
-
-// #InputManger
+// #InputManager
 (function() {
-   var InputManager = ADUN.InputManager = ADUN.Class({
-       EXTEND: ADUN.EventTarget,
+    'strict use';
 
-       init: function (valueStore, source) {
-           this.super();
+    var InputManager = ADUN.InputManager = ADUN.Class({
+        EXTEND: ADUN.EventTarget,
 
-           // 이벤트 타겟을 저장하는 배열
-           this.boardcastTarget = [];
+        init: function(valueStore, source) {
+            this.super();
 
-           // valueStore[네임] => 인풋 상태를 참조하는 객체
-           this.valueStore = valueStore;
+            // 이벤트 타겟을 저장할 배열
+            this.broadcastTarget = [];
 
-           // 소스는 e 객체에 의해서 추가된다.
-           this.source = source || this;
+            // 인풋 상태를 저장할 객체 => valueStore[name] => true || false
+            // 'enter': false
+            this.valueStore = valueStore;
 
-           // _binds[인풋소스.id] = name
-           this._binds = {};
+            // 이벤트 객체에 의하여 추가될 소스
+            this.source = source || this;
 
-           this._stateHandler = function (e) {
-               var name;
+            // 13: 'enter'
+            this._binds = {};
 
-               name = this._binds[e.source.identifier];
-               this.changeState(name, e.data);
-           }.bind(this);
-       },
+            this._stateHandler = function(e) {
+                var id = e.source._id;
+                var name = this._binds[id];
+                this.changeState(name, e.data);
+            }.bind(this);
+        },
 
-       bind: function (inputSource, name) {
-           inputSource.addEventListener(ADUN.Event.INPUT_STATE_CHANGED, this._stateHandler);
-           this._binds[inputSource.identifier] = name;
-       },
+        bind: function(inputSource, name) {
+            inputSource.addEventListener(ADUN.Event.INPUT_STATE_CHANGED, this._stateHandler);
+            this._binds[inputSource._id] = name;
+        },
 
-       unbind: function (inputSource) {
-           inputSource.removeEventListener(ADUN.Event.INPUT_STATE_CHANGED, this._stateHandler);
-       },
+        unbind: function(inputSource) {
+            inputSource.removeEventListener(ADUN.Event.INPUT_STATE_CHANGED, this._stateHandler);
+            delete this._binds[inputSource._id];
+        },
 
-       addBroadcastTarget: function (eventTarget) {
-           var i = this.broadcastTarget.indexOf(eventTarget);
+        addBroadcastTarget: function(eventTarget) {
+            var i = this.broadcastTarget.indexOf(eventTarget);
+            if( i === -1 ) {
+                this.broadcastTarget.push(eventTarget);
+            }
+        },
 
-           if (i === -1) {
-               this.boardcastTarget.push(eventTarget);
-           }
-       },
+        removeBroadcastTarget: function(eventTarget) {
+            var i = this.broadcastTarget.indexOf(eventTarget);
+            if( i !== -1 ) {
+                this.broadcastTarget.splice(i, 1);
+            }
+        },
 
-       removeBroadcastTarget: function (eventTarget) {
-           var i = this.broadcastTarget.indexOf(eventTarget);
-           if (i !== -1) {
-               this.broadcastTarget.splice(i, 1);
-           }
-       },
+        broadcastEvent: function(e) {
+            var i, length, target = this.broadcastTarget;
+            for( i = 0, length = target.length; i < length; ++i ) {
+                target[i].emit(e);
+            }
+        },
 
-       broadcastEvent: function(e) {
-           var i, length, target = this.boardcastTarget;
+        changeState: function(name, data) {
 
-           for( i = 0, length = target.length; i < length; ++i ) {
-               target[i].emit(e);
-           }
-       }
-   });
+        }
+    });
 })();
-
 
 // #InputSource
 (function() {
     var InputSource = ADUN.InputSource = ADUN.Class({
         EXTEND: ADUN.EventTarget,
 
-        init: function(identifier) {
+        init: function(id) {
             this.super();
-
-            this.identifier = identifier;  // @type String
+            this._id = id;
         },
 
         notifyStateChange: function(data) {
@@ -85,18 +87,16 @@
 
 // #BinaryInputManager
 (function() {
-    'strict use';
-
-    var BinaryInputManger = ADUN.BinaryInputManager = ADUN.Class({
+    'use strict';
+    var BinaryInputManager = ADUN.BinaryInputManager = ADUN.Class({
         EXTEND: ADUN.InputManager,
 
         init: function(flagStore, activeEventNameSuffix, inactiveEventNameSuffix, source) {
             this.super(flagStore, source);
 
-            this.activeInputsNum = 0;
+            this.activeInputNum = 0;
 
             this.activeEventNameSuffix = activeEventNameSuffix;
-
             this.inactiveEventNameSuffix = inactiveEventNameSuffix;
         },
 
@@ -106,7 +106,7 @@
         },
 
         unbind: function(binaryInputSource) {
-            var name = this._binds[binaryInputSource.identifier];
+            var name = this._binds[binaryInputSource._id];
             this.super(binaryInputSource);
             delete this.valueStore[name];
         },
@@ -121,46 +121,104 @@
 
         _down: function(name) {
             var inputEvent, downEvent;
-
             if( !this.valueStore[name] ) {
                 this.valueStore[name] = true;
-                inputEvent = new ADUN.Event((this.activeInputsNum++) ? 'inputchange': 'inputstart');
+                inputEvent = new ADUN.Event(( this.activeInputNum++ ) ? 'inputchange' : 'inputstart' );
                 inputEvent.source = this.source;
                 this.broadcastEvent(inputEvent);
             }
-
-            var downEvent = new ADUN.Event(name + this.activeEventNameSuffix);
+            downEvent = new ADUN.Event(name + this.activeEventNameSuffix);
             downEvent.source = this.source;
             this.broadcastEvent(downEvent);
         },
 
         _up: function(name) {
             var inputEvent, upEvent;
-
             if( this.valueStore[name] ) {
                 this.valueStore[name] = false;
-                inputEvent = new ADUN.Event((this.activeInputsNum++) ? 'inputchange': 'inputend');
+                inputEvent = new ADUN.Event(( --this.activeInputNum ) ? 'inputchange' : 'inputend' );
                 inputEvent.source = this.source;
                 this.broadcastEvent(inputEvent);
             }
-
-            var upEvent = new ADUN.Event(name + this.inactiveEventNameSuffix);
+            upEvent = new ADUN.Event(name + this.inactiveEventNameSuffix);
             upEvent.source = this.source;
             this.broadcastEvent(upEvent);
         }
     });
 })();
 
+
 // #BinaryInputSource
 (function() {
-    'strict use';
+     'use strict';
     var BinaryInputSource = ADUN.BinaryInputSource = ADUN.Class({
         EXTEND: ADUN.InputSource,
 
-        init: function(identifier) {
-            this.super(identifier);
+        init: function(id) {    //(keyCode)
+            this.super(id);
         }
     });
 })();
 
-// dtd
+// #KeyboardInputManager
+(function() {
+    'use strict';
+    var KeyboardInputManager = ADUN.KeyboardInputManager = ADUN.Class({
+        EXTEND: ADUN.BinaryInputManager,
+
+        init: function(domElement, flagStore) {
+            this.super(flagStore, 'buttondown', 'buttonup');
+            this._attachDOMEvent(domElement, 'keydown', true);
+            this._attachDOMEvent(domElement, 'keyup', false);
+        },
+
+        _attachDOMEvent: function(domElement, eventType, state) {
+            domElement.addEventListener(eventType, function(e) {
+                var code, source, heart;
+
+                heart = ADUN.Heart.instance;
+
+                if(!heart || !heart.running) {
+                    return;
+                }
+
+                code = e.keyCode;
+
+                source = ADUN.KeyboardInputSource._instances[code];
+
+                if( source ) {
+                    source.notifyStateChange(state);
+                }
+            }, true);
+        },
+
+        keybind: function(keyCode, name) {
+            this.bind(ADUN.KeyboardInputSource.getByKeyCode('' + keyCode), name);
+        },
+
+        keyunbind: function(keyCode) {
+            this.unbind(ADUN.KeyboardInputSource.getByKeyCode('' + keyCode));
+        }
+    });
+})();
+
+// #KeyboardInputSource
+(function() {
+    var KeyboardInputSource = ADUN.KeyboardInputSource = ADUN.Class({
+        EXTEND: ADUN.BinaryInputSource,
+
+        init: function(keyCode) {
+            this.super(keyCode);
+        }
+    });
+
+    // 키보드 인스턴스
+    KeyboardInputSource._instances = {};
+
+    KeyboardInputSource.getByKeyCode = function(keyCode) {
+        if( !this._instances[keyCode] ) {
+            this._instances[keyCode] = new ADUN.KeyboardInputSource(keyCode);
+        }
+        return this._instances[keyCode];
+    }
+})();
