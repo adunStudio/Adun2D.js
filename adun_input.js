@@ -12,6 +12,9 @@
             // 이벤트 타겟을 저장할 배열
             this.broadcastTarget = [];
 
+            var a = 2;
+
+
             // 인풋 상태를 저장할 객체 => valueStore[name] => true || false
             // 'enter': false
             this.valueStore = valueStore;

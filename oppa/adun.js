@@ -6,28 +6,7 @@
         ADUN_VESION: '0.0.1'
     };
 
-    var adun = global.ADUN = global.Adun = global.adun = adun;
-
-
-
-    adun.getTime = (function() {
-
-        var origin = Date.now();
-
-        if( window.performance && window.performance.now ) {
-            return function() {
-                return origin + window.performance.now();
-            }
-        } else if( window.performance && window.performance.webkitNow ) {
-            return function() {
-                return origin + window.performance.webkitNow();
-            }
-        } else {
-            return function() {
-                return Date.now();
-            }
-        }
-    })();
+    global.ADUN = global.Adun = global.adun = adun;
 
     // 확장 메서드(얉은 복사, 깊은 복사)
     adun.extend = function() {
@@ -58,7 +37,7 @@
         for( ; i < length; ++i ) {
             // 인자로 넘어온 객체의 프로퍼티를 options로 참조 시키고,
             // 이 프로퍼티가 null이 아닌 경우 블록 안으로 진입한다.
-            if( (options = arguments[i]) != null) {
+            if( (options = arguments[i]) !== undefined ) {
                 for( name in options ) {
                     // src  는 반환될 복사본 target의 프로퍼티를 참조하고,
                     // copy 는 복사할 원본의 프로퍼티를 참조한다.
@@ -88,8 +67,7 @@
                         // clone에 copy를 복사한다. copy 객체안에 다시 객체 배열 or 객체가 있는 경우 다시 재귀 호출을 한다.
                         target[name] = adun.extend(deep, clone, copy);
 
-                    } else if( copy !== undefined ) {
-
+                    } else if( copy != null ) {
                         target[name] = copy;
                     }
                 }
@@ -100,21 +78,5 @@
         return target;
     };
 
-    // 파일 확장자 찾기
-    adun.findExtention = function(path) {
 
-        var extention = path.match(/\.\w+$/);
-
-        // jpg, png ...
-        if( extention && extention.length > 0 ) {
-            return path.split(/[\/;]/)[1].toLowerCase();
-        }
-
-        // data URI
-        if( path.indexOf('data:') == 0 ) {
-            return path.split(/[\/;]/)[1].toLowerCase();
-        }
-
-        return null;
-    };
 })(window);

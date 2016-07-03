@@ -8,9 +8,32 @@
 <canvas id="canvas"></canvas>
 </body>
 </html>
-<script src="./adun.js"></script>
-<script src="./adun_input.js"></script>
+<script src="./oppa/adun.js"></script>
+<script src="./oppa/adun_utils.js"></script>
+<script src="./oppa/adun_class.js"></script>
+<script src="./oppa/adun_deferred.js"></script>
+<script src="./oppa/adun_env.js"></script>
+<script src="./oppa/adun_event.js"></script>
+<script src="./oppa/adun_eventtarget.js"></script>
+<script src="./oppa/adun_matrix.js"></script>
+<script src="./oppa/adun_input.js"></script>
+<script src="./oppa/adun_node.js"></script>
+
+
+
+
+
 <script>
-    var heart = new ADUN.Heart();
+console.dir(adun);
+adun.Deferred.parallel([
+    adun.Deferred.next(function() {
+        return 24;
+    }),
+    adun.Deferred.next(function() {
+        return 16;
+    })
+]).next(function(arg) {
+    console.dir(arg);
+})
 
 </script>
