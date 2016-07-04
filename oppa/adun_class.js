@@ -12,7 +12,7 @@
         var prototype = {};
 
         if( extend && adun.isObject(extend)) {
-            
+
             if( extend.constructor != adun.Class ) {
                 throw new Error('extend constructor is not adun.Class (adun.Class)');
             }
@@ -38,7 +38,7 @@
                 this.init.apply(this, arguments);
             }
         };
-        Class.prototype = prototype;
+        Class.prototype = Object.create(prototype);
         Class.constructor = adun.Class;
 
         return Class;

@@ -82,4 +82,7 @@
     // 인풋 상태가 변경되면 발생한다.
     Event.INPUT_STATE_CHANGED = 'inputstatechanged';
 
+    // 스프라이트에서 프레임에 null값이 할당되 애니메이션이 끝나면 발생한다.
+    Event.ANIMATION_END = 'animationend'
+
 })();

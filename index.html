@@ -19,6 +19,10 @@
 <script src="./oppa/adun_input.js"></script>
 <script src="./oppa/adun_node.js"></script>
 <script src="./oppa/adun_group.js"></script>
+<script src="./oppa/adun_entity.js"></script>
+<script src="./oppa/adun_sprite.js"></script>
+
+
 
 
 
@@ -26,19 +30,8 @@
 
 
 <script>
-console.dir(adun);
-adun.Deferred.parallel([
-    adun.Deferred.next(function() {
-        return 24;
-    }),
-    adun.Deferred.next(function() {
-        return 16;
-    })
-]).next(function(arg) {
-    console.dir(arg);
-})
-
-var a = new adun.Group();
+var a = new adun.Entity();
 console.dir(a);
+
 
 </script>
