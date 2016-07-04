@@ -25,32 +25,30 @@
             this.parentNode = null;
 
             this.scene = null;
+        },
 
-            Object.defineProperties(this, {
-                x: {
-                    get: function() {
-                        return this._x;
-                    },
-                    set: function(x) {
-                        if(this._x !== x) {
-                            this._x = x;
-                            this._dirty = true;
-                        }
-                    }
-                },
-
-                y: {
-                    get: function() {
-                        return this._y;
-                    },
-                    set: function(y) {
-                        if(this._y !== y) {
-                            this._y = y;
-                            this._dirty = true;
-                        }
-                    }
+        x: {
+            get: function() {
+                return this._x;
+            },
+            set: function(x) {
+                if(this._x !== x) {
+                    this._x = x;
+                    this._dirty = true;
                 }
-            });
+            }
+        },
+
+        y: {
+            get: function() {
+                return this._y;
+            },
+            set: function(y) {
+                if(this._y !== y) {
+                    this._y = y;
+                    this._dirty = true;
+                }
+            }
         },
 
         moveTo: function(x, y) {

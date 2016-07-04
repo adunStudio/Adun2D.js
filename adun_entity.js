@@ -42,95 +42,93 @@
             this.buttonPressed = null;
 
             this.enableCollection();
+        },
 
-            Object.defineProperties(this, {
-                rotation: {
-                    get: function() {
-                        return this._rotation;
-                    },
-                    set: function(rotation) {
-                        if (this._rotation !== rotation ) {
-                            this._rotation = rotation;
-                            this._dirty = true;
-                        }
-                    }
-                },
-
-                originX: {
-                    get: function() {
-                        return this._originX;
-                    },
-                    set: function(originX) {
-                        if ( this._originX !== originX ) {
-                            this._originX = originX;
-                            this._dirty = true;
-                        }
-                    }
-                },
-
-                originY: {
-                    get: function() {
-                        return this._originY;
-                    },
-                    set: function(originY) {
-                        if ( this._originY !== originY ) {
-                            this._originY = originY;
-                            this._dirty = true;
-                        }
-                    }
-                },
-
-                width: {
-                    get: function() {
-                        return this._width;
-                    },
-                    set: function(width) {
-                        if(this._width !== width) {
-                            this._width = width;
-                            this._dirty = true;
-                        }
-                    }
-                },
-
-                height: {
-                    get: function() {
-                        return this._height;
-                    },
-                    set: function(height) {
-                        if(this._height !== height) {
-                            this._height = height;
-                            this._dirty = true;
-                        }
-                    }
-                },
-
-                backgroundColor: {
-                    get: function() {
-                        return this._backgroundColor;
-                    },
-                    set: function(color) {
-                        this._backgroundColor = color;
-                    }
-                },
-
-                opacity: {
-                    get: function() {
-                        return this._opacity;
-                    },
-                    set: function(opacity) {
-                        this._opactiy = parseFloat(opacity);
-                    }
-                },
-
-                visible: {
-                    get: function() {
-                        return this._visible;
-                    },
-                    set: function(visible) {
-                        this._visible = visible;
-                    }
+        rotation: {
+            get: function() {
+                return this._rotation;
+            },
+            set: function(rotation) {
+                if (this._rotation !== rotation ) {
+                    this._rotation = rotation;
+                    this._dirty = true;
                 }
-            });
+            }
+        },
+
+        originX: {
+            get: function() {
+                return this._originX;
+            },
+            set: function(originX) {
+                if ( this._originX !== originX ) {
+                    this._originX = originX;
+                    this._dirty = true;
+                }
+            }
+        },
+
+        originY: {
+            get: function() {
+                return this._originY;
+            },
+            set: function(originY) {
+                if ( this._originY !== originY ) {
+                    this._originY = originY;
+                    this._dirty = true;
+                }
+            }
+        },
+
+        width: {
+            get: function() {
+                return this._width;
+            },
+            set: function(width) {
+                if(this._width !== width) {
+                    this._width = width;
+                    this._dirty = true;
+                }
+            }
+        },
+
+        height: {
+            get: function() {
+                return this._height;
+            },
+            set: function(height) {
+                if(this._height !== height) {
+                    this._height = height;
+                    this._dirty = true;
+                }
+            }
+        },
+
+        backgroundColor: {
+            get: function() {
+                return this._backgroundColor;
+            },
+            set: function(color) {
+                this._backgroundColor = color;
+            }
+        },
+
+        opacity: {
+            get: function() {
+                return this._opacity;
+            },
+            set: function(opacity) {
+                this._opactiy = parseFloat(opacity);
+            }
+        },
+
+        visible: {
+            get: function() {
+                return this._visible;
+            },
+            set: function(visible) {
+                this._visible = visible;
+            }
         },
 
         // 사각형 충돌
@@ -283,13 +281,8 @@
                 leftBottom: [ m21h + mdx, m22h + mdy ],
                 rightBottom: [ m11w + m21h + mdx, m12w + m22h + mdy ]
             };
-        },
-
-        hong: {
-            get : function() {
-                return 1;
-            }
         }
+
     });
 
 
