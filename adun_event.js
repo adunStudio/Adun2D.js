@@ -25,7 +25,7 @@
 
     // 심장이 준비 완료되면 발생한다.
     // ex) 이미지 프리로딩
-    Event.Load = 'load';
+    Event.LOAD = 'load';
 
     // 에러가 발생하면 발생한다.
     Event.ERROR = 'error';

@@ -11,7 +11,7 @@
 // 2. => emit(adun.Event.INPUT_STATE_CHANGED)  e.data = true, e.source = this
 // 3. => 키보드매니저._stateHandler ( name = this._binds[13] = 'enter' ) ==> 키보드매니저._changeState('enter', true)
 // 4. => this.down('enter');  여기서 this는 키보드 매니저
-// 5. => valueStore['enter'] = true,  그리고 INPUT_CHANGE or INPU_START 그리고 enterbuttondown 이벤트(총 2개 ) 발생
+// 5. => valueStore['enter'] = true,  그리고 INPUT_CHANGE or INPU_START 그리고 enterbuttondown 이벤트(총 2개 ) broadcast
 
 // 사용방법 heart.on('enterbuttondown', function() {
 //           // 로직
@@ -97,7 +97,7 @@
     'use strict';
 
     var BinaryInputManager = adun.BinaryInputManager = adun.Class({
-        extend: adun.inputManager,
+        extend: adun.InputManager,
 
         init: function(valueStore, activeEventNameSuffix, inactiveEventNameSuffix, source) {
             this.super(valueStore, source);
@@ -176,7 +176,6 @@
 
         init: function(domElement, flagStore) {
             this.super(flagStore, 'buttondown', 'buttonup');
-
             this._attachDOMEvent(domElement, 'keydown', true);
             this._attachDOMEvent(domElement, 'keyup', false);
         },

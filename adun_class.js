@@ -12,7 +12,6 @@ var a = 1;
         var prototype = {};
 
         if( extend && adun.isObject(extend)) {
-
             if( extend.constructor != adun.Class ) {
                 throw new Error('extend constructor is not adun.Class (adun.Class)');
             }
