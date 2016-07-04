@@ -24,7 +24,7 @@
                             child.emit(e);
                         });
                     });
-                });
+                }, this);
 
             Object.defineProperties(this, {
                 firstChild: {
@@ -168,7 +168,25 @@
         },
 
         removeChild: function(node) {
-            
+            var i = this.childNodes.indexOf(node);
+
+            if( i !== -1 ) {
+                this.childNodes.splice(i, 1);
+                node.parentNode = null;
+
+                var childRemoved = new adun.Event(adun.Event.CHILD_REMOVED);
+                childRemoved.node = node;
+
+                this.emit(childRemoved);
+                node.emit(new adun.Event(adun.Event.REMOVED));
+
+                if( this.scene ) {
+                    node.scene = null;
+
+                    var removedFromScene = new adun.Event(adun.Event.REMOVED_FROM_SCENE);
+                    node.emit(removedFromScene);
+                }
+            }
         }
     });
 

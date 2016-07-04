@@ -46,6 +46,9 @@
     // 새로운 씬에  진입할때 발생한다.
     Event.ENTER = 'enter';
 
+    // 씬이 끝날때 발생한다.
+    Event.EXIT = 'exit';
+
     // child가 Node에 추가될때 발생한다.
     Event.CHILD_ADDED = 'childadded';
 

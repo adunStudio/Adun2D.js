@@ -18,6 +18,8 @@
 <script src="./oppa/adun_matrix.js"></script>
 <script src="./oppa/adun_input.js"></script>
 <script src="./oppa/adun_node.js"></script>
+<script src="./oppa/adun_group.js"></script>
+
 
 
 
@@ -35,5 +37,8 @@ adun.Deferred.parallel([
 ]).next(function(arg) {
     console.dir(arg);
 })
+
+var a = new adun.Group();
+console.dir(a);
 
 </script>

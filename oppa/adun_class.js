@@ -11,7 +11,8 @@
         var name, extend = definition.extend;
         var prototype = {};
 
-        if( extend && typeof extend == 'object') {
+        if( extend && adun.isObject(extend)) {
+            
             if( extend.constructor != adun.Class ) {
                 throw new Error('extend constructor is not adun.Class (adun.Class)');
             }
@@ -24,11 +25,11 @@
                 (function(name, fn) {
                     return function() {
                         this.super = extend.prototype[name];
-                        var ret = fn.apply(this, argumnets);
+                        var ret = fn.apply(this, arguments);
                         delete this.super;
                         return ret;
                     };
-                })(name, definition[namm]) :
+                })(name, definition[name]) :
                 definition[name];
         }
 
