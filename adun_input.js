@@ -44,17 +44,11 @@
                 var id, name;
 
                 id = e.source._id; //      number ex) 13
-                console.dir(this._binds);
                 name = this._binds[id]; // string ex) 'enter'
 
                 this.changeState(name, e.data);
             }.bind(this);
         },
-
-        //_stateHandler: function(e) {
-
-        //}.bind(this),
-
 
         bind: function(inputSource, name) {
             inputSource.on(adun.Event.INPUT_STATE_CHANGED, this._stateHandler);
@@ -198,7 +192,6 @@
                 code = e.keyCode;
 
                 source = adun.KeyboardInputSource.instance[code];
-                console.dir(source);
                 if( source ) {
                     source.notifyStateChange(state);
                 }

@@ -25,8 +25,12 @@
 
             this.on(adun.Event.CHILD_ADDED, this._onchildadded);
             this.on(adun.Event.CHILD_REMOVED, this._onchildremoved);
-            this.on(adun.Event.ENTER, this._onenter);
-            this.on(adun.Event.EXIT, this._onexit);
+            this.on(adun.Event.ENTER, function() {
+
+
+            });
+            //this.on(adun.Event.ENTER, this._onenter);
+            //this.on(adun.Event.EXIT, this._onexit);
 
             this.on(adun.Event.HEART_RESIZE, this._onHeartResize);
 

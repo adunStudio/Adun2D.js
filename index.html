@@ -28,6 +28,9 @@
 <script src="./adun_surface.js"></script>
 <script src="./adun_scene.js"></script>
 <script src="./adun_heart.js"></script>
+<script src="./adun_map.js"></script>
+<script src="./adun_loadingScene.js"></script>
+
 
 
 
@@ -35,4 +38,15 @@
 <script>
 var h = new adun.Heart();
 console.dir(h);
+
+h.preload({
+    one: './imac.png',
+    two: './imac.png',
+    three: './imac.png',
+});
+h.onload = function() {
+    alert('ddddd');
+}
+h.start();
+
 </script>

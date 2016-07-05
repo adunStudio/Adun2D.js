@@ -31,7 +31,7 @@
 
         // jpg, png...
         if( extention && extention.length > 0 ) {
-            return path.split(/[\/;]/)[1].toLowerCase();
+            return extention[0].slice(1).toLowerCase();
         }
 
         // date URI

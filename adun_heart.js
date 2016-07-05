@@ -104,14 +104,15 @@
 
             this.running = false;
 
+            this.assets = {};
             this._assets = [];
 
             this.currentScene = null;
 
             this.rootScene = new adun.Scene();
-            //this.pushScene(this.rootScene);
+            this.pushScene(this.rootScene);
 
-            this.loadingScene = null;
+            this.loadingScene = new adun.LoadingScene();
 
             this._activated = false;
 
@@ -242,33 +243,27 @@
             }
         },
 
-        keybind: function(key, button) {
-            this.keyboardInputManager.keybind(key, button);
-            this.on(button + 'buttondown', function() {
-                //alert('keydown');
-            });
-            this.on(button + 'buttonup', function() {
-                alert('keyup');
-            });
-        },
-
         preload: function(assets) {
             var a, name;
 
             if( !adun.isArray(assets) ) {
 
-                if( !adun.isPlainObject(assets) ) {
+                if( adun.isPlainObject(assets) ) {
 
                     a = [];
 
                     for( name in assets ) {
+                        console.log(name);
                         if( adun.has(assets, name) ) {
                             a.push([assets[name], name]);
                         }
                     }
 
+                    assets = a;
+
                 } else {
                     assets = Array.prototype.slice.call(arguments);
+
                 }
 
             }
@@ -300,10 +295,279 @@
             ext = adun.findExtention(src);
 
             return adun.Deferred.next(function() {
+                var d = new adun.Deferred();
 
+                var _callback = function(e) {
+                    d.call(e);
+                    callback.call(this, e);
+                };
+
+                var _onerror = function(e) {
+                    d.fail(e);
+                    onerror.call(this, e);
+                };
+
+                if( adun.ENV.IMAGE.indexOf(ext) !== -1 ) {
+
+                    adun.Heart.instance.assets[assetName] = adun.Surface.load(src, _callback, _onerror);
+
+                } else if( adun.ENV.SOUND.indexOf(ext) !== -1 ) {
+
+                    adun.Heart.instance.assets[assetName] = adun.Sound.load(src, 'audio/' + ext, _callback, _onerror);
+
+                } else {
+                    throw new Error('cannot this asset ' + ext);
+                }
+
+                return d;
             });
+        },
+
+        start: function(deferred) {
+
+            var onloadTimeSetter = function() {
+                //this.frame = 0;
+                //this.removeEventListener(adun.Event.LOAD, onloadTimeSetter);
+            };
+
+            this.on(adun.Event.LOAD, function() {
+                alert('dddd');
+            });
+
+            this.currentTime = adun.getTime();
+
+            this.running = true;
+
+            this.ready = true;
+
+            if( !this._activated ) {
+
+                this._activated = true;
+
+            }
+
+            this._requestNextFrame(0);
+
+            var ret = this._requestPreload().next(function() {
+                Heart.loadingScene.emit(new adun.Event(adun.Event.LOAD));
+            });
+
+
+        },
+
+        _requestPreload: function() {
+            var queue = {};
+            var loaded, total, loadFunc;
+
+            loaded = 0;
+            total = 0;
+
+            loadFunc = function() {
+                var e = new adun.Event(adun.Event.PROGRESS);
+                e.loaded = ++loaded;
+                e.total = total;
+                Heart.loadingScene.emit(e);
+            };
+
+            this._assets.reverse().forEach(function(asset) {
+                var src, name;
+
+                if( adun.isArray(asset) ) {
+                    src = asset[0];
+                    name = asset[1];
+                } else {
+                    src = name = asset;
+                }
+
+                if( !queue[name] ) {
+                    queue[name] = this.load(src, name, loadFunc);
+                    total++;
+                }
+
+            }, this);
+
+            this.pushScene(this.loadingScene);
+
+            return adun.Deferred.parallel(queue);
+        },
+
+        _requestNextFrame: function(delay) {
+
+            if( !this.ready ) {
+                return;
+            }
+
+            if( this.fps >= 60 || delay <= 16 ) {
+
+                this._calledTime = adun.getTime();
+
+                window.requestAnimationFrame(this._callTick);
+
+            } else {
+
+                setTimeout(function() {
+
+                    var heart = adun.Heart.instance;
+                    heart._clledTime = adun.getTime();
+
+                    window.requestAnimationFrame(heart._callTick);
+
+                }, Math.max(0, delay));
+
+            }
+
+        },
+
+        _callTick: function(time) {
+            adun.Heart.instance._tick(time);
+        },
+
+        _tick: function(time) {
+
+            var e, now, elapsed, nodes, push, node;
+
+            e = new adun.Event(adun.Event.ENTER_FRAME);
+
+            now = adun.getTime();
+
+            elapsed = e.elapsed = now - this.currentTime;
+
+            this.currentTime = now;
+
+            this.atualFps = elapsed > 0 ? (1000 / elapsed) : 0;
+
+
+            nodes = this.currentScene.childNodes.slice();
+
+            while( nodes.length ) {
+                node = nodes.pop();
+                node.age ++;
+                node.emit(e);
+
+                if( node.childNodes ) {
+                    Array.prototype.push.apply(nodes, node.childNodes);
+                }
+            }
+
+            this.currentScene.age ++;
+            this.currentScene.emit(e);
+
+            this.emit(e);
+
+            this.emit(new adun.Event(adun.Event.EXIT_FRAME));
+
+            this.frame ++;
+
+
+            now = adun.getTime();
+
+            this._requestNextFrame(1000 / this.fps - (now - this._calledTime));
+        },
+
+        getTime: function() {
+            return adun.getTime();
+        },
+
+        stop: function() {
+            this.ready = false;
+            this.running = false;
+        },
+
+        // frame은 업데이트되지만, input은 업데이트되지 않는다.
+        pause: function() {
+            this.ready = false;
+        },
+
+        resume: function() {
+            if( this.ready ) {
+                return;
+            }
+
+            this.currentTime = adun.getTime();
+            this.ready = true;
+            this.running = true;
+            this._requestNextFrame(0);
+        },
+
+        pushScene: function(scene) {
+
+            this._element.appendChild(scene._element);
+
+            if( this.currentScene ) {
+                this.currentScene.emit(new adun.Event(adun.Event.EXIT));
+            }
+
+            this.currentScene = scene;
+            this.currentScene.emit(new adun.Event(adun.Event.ENTER));
+
+            return this._scenes.push(scene);
+        },
+
+        popScene: function() {
+
+            if(this.currentScene === this.rootScene ) {
+                return this.currentScene;
+            }
+
+            this._element.removeChild(this.currentScene._element);
+
+            this.currentScene.emit(new adun.Event(adun.Event.EXIT));
+            this.currentScene = this._scenes[this._scenes.length - 2];
+            this.currentScene.emit(new adun.Event(adun.Event.ENTER));
+
+            return this._scenes.pop();
+        },
+
+        replaceScene: function(scene) {
+            this.popScene();
+            return this.pushScene(scene);
+        },
+
+        removeScene: function(scene) {
+            if(this.currentScene ==- scene) {
+                return this.popScene();
+            } else {
+                var i = this._scens.indexOf(scene);
+                if( i !== -1 ) {
+                    this._scenes.splice(i, 1);
+                    this._element.removeChild(scene._element);
+                    return scene;
+                } else {
+                    return null;
+                }
+            }
+        },
+
+        _buttonListener: function(e) {
+            console.dir(e);
+            this.currentScene.emit(e);
+        },
+
+        keybind: function(key, button) {
+            this.keyboardInputManager.keybind(key, button);
+            this.on(button + 'buttondown', this._buttonListener);
+            this.on(button + 'buttonup', this._buttonListener);
+        },
+
+        keyunbind: function(key) {
+            var button = this._keybind[key];
+            this.keyboardInputManager.keyunbind(key);
+            this.removeEventListener(button + 'buttondown', this._buttonListener);
+            this.removeEventListener(button + 'buttonup', this._buttonListener);
+
+            return this;
+        },
+
+        changeButtonState: function(button, bool) {
+            this.keyboardInputManager.changeState(button, state);
+        },
+
+        getElapsedTime: function() {
+            return this.frame / this.fps;
         }
 
     });
+
+    adun.Heart.instance = null;
 
 })();

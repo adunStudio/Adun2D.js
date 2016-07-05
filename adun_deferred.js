@@ -77,9 +77,9 @@
             } else if( arg instanceof Error ) {
                 throw arg;
             } else {
-                err = new Error('faild in Deferred');
-                err.arg = arg;
-                throw err;
+                error = new Error('failed in Deferred');
+                error.arg = arg;
+                throw error;
             }
         }
     });
@@ -127,7 +127,7 @@
                     // 복사본.next(fn)
                     queue.next(function(arg) {
                         progress --;
-                        
+
                         ret[name] = arg;    // 리턴된 값,
 
                         if( progress <= 0 ) {

@@ -74,7 +74,11 @@
         CANVAS_METHODS: [
             'putImageData', 'drawImage', 'drawFocusRing', 'fill', 'stroke',
             'clearRect', 'fillRect', 'strokeRect', 'fillText', 'strokeText'
-        ]
+        ],
+
+        IMAGE: ['jpg', 'jpeg', 'gif', 'png', 'bmp'],
+
+        SOUND: ['mp3', 'aac', 'm4a', 'wav', 'ogg']
 
     };
 })();
