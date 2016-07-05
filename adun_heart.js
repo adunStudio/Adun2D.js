@@ -89,7 +89,7 @@
 
             this._element = stage;
 
-            this.on(adun.Event.HEART_RESIZE, this._onheartresize);
+            this.on(adun.Event.HEART_RESIZE, this._onHeartResize);
 
             this._width = width;
             this._height = height;
@@ -104,7 +104,7 @@
 
             this.running = false;
 
-            //assets
+            this._assets = [];
 
             this.currentScene = null;
 
@@ -113,17 +113,195 @@
 
             this.loadingScene = null;
 
+            this._activated = false;
+
+            this._offsetX = 0;
+            this._offsetY = 0;
+
             this.input = {};
 
             this.keyboardInputManager = new adun.KeyboardInputManager(window.document, this.input);
             this.keyboardInputManager.addBroadcastTarget(this);
+            this._keybind = this.keyboardInputManager._binds;
+
+            for( var prop in adun.ENV.KEY_BIND_TABLE ) {
+                this.keybind(prop, adun.ENV.KEY_BIND_TABLE[prop]);
+            }
+
+            if( initial ) {
+
+                stage = adun.Heart.instance._element;
+
+                var evt;
+
+                document.addEventListener('keydown', function(e) {
+
+                    Heart.emit(new adun.Event(adun.Event.KEY_DOWN));
+
+                    // if( adun.ENV.PREVENT_DEFAULT_KEY_TABLE[e.keyCode] !== -1 ) {
+                    //     e.preventDefault();
+                    //     e.stopPropagation();
+                    // }
+
+                }, true);
+
+                stage.addEventListener('mousedown', function(e) {
+
+                    var tagName = (e.target.tagName).toLowerCase();
+
+                    if( adun.ENV.DEFALUT_TAGS.indexOf(tagName) === -1 ) {
+                        e.preventDefault();
+
+                        Heart._mousedownID ++;
+
+                        if( !Heart.running ) {
+                            e.stopPropagation();
+                        }
+                    }
+
+                }, true);
+
+                stage.addEventListener('mousemove', function(e) {
+                    var tagName = (e.target.tagName).toLowerCase();
+
+                    if( adun.ENV.DEFALUT_TAGS.indexOf(tagName) === -1 ) {
+                        e.preventDefault();
+
+                        if( !Heart.running ) {
+                            e.stopPropagation();
+                        }
+                    }
+                }, this);
+
+                stage.addEventListener('mouseup', function(e) {
+                    var tagName = (e.target.tagName).toLowerCase();
+
+                    if( adun.ENV.DEFALUT_TAGS.indexOf(tagName) === -1 ) {
+                        e.preventDefault();
+
+                        if( !Heart.running ) {
+                            e.stopPropagation();
+                        }
+                    }
+                });
+
+            }
 
 
 
+        },
 
+        width: {
+            get: function() {
+                return this._width;
+            },
+            set: function(w) {
+                this._width = w;
+                this._dispatchHeartResizeEvent();
+            }
+        },
 
+        height: {
+            get: function() {
+                return this._height;
+            },
+            set: function(h) {
+                this._height = h;
+                this._dispatchHeartResizeEvent();
+            }
+        },
 
+        scale: {
+            get: function () {
+                return this._scale;
+            },
+            set: function (s) {
+                this._scale = s;
+                this._dispatchHeartResizeEvent();
+            }
+        },
 
+        _dispatchHeartResizeEvent: function() {
+            var e = new adun.Event(adun.Event.HEART_RESIZE);
+            e.width = this._width;
+            e.height = this._height;
+            e.scale = this._scale;
+            this.emit(e);
+        },
+
+        _onHeartResize: function(e) {
+
+            this._element.style.width = Math.floor(this._width * this._scale) + 'px';
+            this._element.style.height = Math.floor(this._height * this._scale) + 'px';
+
+            var i, len, scene;
+
+            for( i = 0, len = this._scenes.length; i < len; ++i ) {
+                scene = this._scenes[i];
+                scene.emit(e);
+            }
+        },
+
+        keybind: function(key, button) {
+            this.keyboardInputManager.keybind(key, button);
+            this.on(button + 'buttondown', function() {
+                //alert('keydown');
+            });
+            this.on(button + 'buttonup', function() {
+                alert('keyup');
+            });
+        },
+
+        preload: function(assets) {
+            var a, name;
+
+            if( !adun.isArray(assets) ) {
+
+                if( !adun.isPlainObject(assets) ) {
+
+                    a = [];
+
+                    for( name in assets ) {
+                        if( adun.has(assets, name) ) {
+                            a.push([assets[name], name]);
+                        }
+                    }
+
+                } else {
+                    assets = Array.prototype.slice.call(arguments);
+                }
+
+            }
+
+            Array.prototype.push.apply(this._assets, assets);
+
+            return this;
+        },
+
+        load: function(src, name, callback, onerror) {
+            var assetName, tmpCallback, ext;
+
+            // name이 string이라면 블록에 진입
+            if( adun.isString(name) ) {
+
+                assetName = name;
+                callback = callback || function() { };
+                onerror = onerror || function() { };
+
+            } else {
+
+                assetName = src;
+                tmpCallback = callback;
+                callback = arguments[1] || function() { };
+                onerror = tmpCallback || function() { };
+
+            }
+
+            ext = adun.findExtention(src);
+
+            return adun.Deferred.next(function() {
+
+            });
         }
 
     });

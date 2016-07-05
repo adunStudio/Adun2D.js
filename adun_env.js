@@ -67,11 +67,14 @@
             82: 'r'
         },
 
-        PREVENT_DEFAULT_KEY_TABLE: [13, 27, 32, 37, 38, 39, 40, 65, 83, 70, 81, 87, 69, 81],
+        PREVENT_DEFAULT_KEY_TABLE: [13, 27, 32, 37, 38, 39, 40, 65, 83, 70, 81, 87, 69, 81, 123],
+
+        DEFALUT_TAGS: ['input', 'textarea', 'select', 'area'],
 
         CANVAS_METHODS: [
             'putImageData', 'drawImage', 'drawFocusRing', 'fill', 'stroke',
             'clearRect', 'fillRect', 'strokeRect', 'fillText', 'strokeText'
         ]
+
     };
 })();

@@ -1445,38 +1445,7 @@
             }
 
 
-            Object.defineProperties(this, {
-                width: {
-                    get: function() {
-                        return this._width;
-                    },
-                    set: function(w) {
-                        this._width = w;
-                        this._dispatchHeartResizeEvent();
-                    }
-                },
-
-                height: {
-                    get: function() {
-                        return this._height;
-                    },
-                    set: function(h) {
-                        this._height = h;
-                        this._dispatchHeartResizeEvent();
-                    }
-                },
-
-                scale: {
-                    get: function () {
-                        return this._scale;
-                    },
-                    set: function (s) {
-                        this._scale = s;
-                        this._dispatchHeartResizeEvent();
-                    }
-                }
-
-            });
+            
 
 
 

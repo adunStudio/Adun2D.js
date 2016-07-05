@@ -39,16 +39,21 @@
             // id: name
             // 13: 'enter'
             this._binds = [];
+
+            this._stateHandler = function(e) {
+                var id, name;
+
+                id = e.source._id; //      number ex) 13
+                console.dir(this._binds);
+                name = this._binds[id]; // string ex) 'enter'
+
+                this.changeState(name, e.data);
+            }.bind(this);
         },
 
-        _stateHandler: function() {
-            var id, name;
+        //_stateHandler: function(e) {
 
-            id = e.source._id; //      number ex) 13
-            name = this._binds[id]; // string ex) 'enter'
-
-            this.changeState(name, e.data);
-        }.bind(this),
+        //}.bind(this),
 
 
         bind: function(inputSource, name) {
@@ -78,7 +83,7 @@
         },
 
         broadcastEvent: function(e) {
-            var i, len, target = this.boradcastTarget;
+            var i, len, target = this.broadcastTarget;
 
             for( i = 0, len = target.length; i < len; ++i) {
                 target[i].emit(e);
@@ -141,6 +146,7 @@
                 this.broadcastEvent(inputEvent);
             }
 
+
             downEvent = new adun.Event(name + this.activeEventNameSuffix);
             downEvent.source = this.source;
 
@@ -188,10 +194,11 @@
                     return;
                 }
 
+
                 code = e.keyCode;
 
-                source = adun.KeyboardInputSource[code];
-
+                source = adun.KeyboardInputSource.instance[code];
+                console.dir(source);
                 if( source ) {
                     source.notifyStateChange(state);
                 }
@@ -215,7 +222,7 @@
 (function() {
     'use strict';
 
-    var InputSource = adun.Class({
+    var InputSource = adun.InputSource = adun.Class({
         extend: adun.EventTarget,
 
         init: function(id) {
@@ -239,7 +246,7 @@
     'use strict';
 
     var KeyboardInputSource = adun.KeyboardInputSource = adun.Class({
-        extend: adun.inputSource,
+        extend: adun.InputSource,
 
         init: function(keyCode) {
             this.super(keyCode);
@@ -247,14 +254,14 @@
     });
 
     // 키보드 인스턴스
-    KeyboardInputSource.instances = {};
+    KeyboardInputSource.instance = {};
 
     KeyboardInputSource.getByKeyCode = function(keyCode) {
         if( !KeyboardInputSource.instance[keyCode] ) {
             KeyboardInputSource.instance[keyCode] = new adun.KeyboardInputSource(keyCode);
         }
 
-        return KeyboardInputSource.instances[keyCode];
+        return KeyboardInputSource.instance[keyCode];
     };
 
 })();

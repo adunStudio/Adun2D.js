@@ -85,4 +85,7 @@
     // 스프라이트에서 프레임에 null값이 할당되 애니메이션이 끝나면 발생한다.
     Event.ANIMATION_END = 'animationend';
 
+    // 키가눌러졋을때 heart로 발생한다.
+    Event.KEY_DOWN = 'keydown';
+
 })();

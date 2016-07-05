@@ -28,12 +28,12 @@
             this.on(adun.Event.ENTER, this._onenter);
             this.on(adun.Event.EXIT, this._onexit);
 
-            this.on(adun.Event.HEART_RESIZE, this._onheartresize);
+            this.on(adun.Event.HEART_RESIZE, this._onHeartResize);
 
 
             var self = this;
 
-            this._onheartresize(heart);
+            this._onHeartResize(heart);
 
         },
 
@@ -140,7 +140,7 @@
             return adun.Heart.instance.removeScene(this);
         },
 
-        _onheartresize: function(e) {
+        _onHeartResize: function(e) {
             this._element.style.width = e.width + 'px';
             this.width = e.width;
             this._element.style.height = e.height + 'px';
