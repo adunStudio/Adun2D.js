@@ -8,7 +8,6 @@
 
         init: function(width, height) {
             this.super();
-            alert('haha');
             this.width = Math.ceil(width);
             this.height = Math.ceil(height);
 

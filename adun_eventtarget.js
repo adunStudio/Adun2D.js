@@ -59,10 +59,8 @@
             e.localY = e.y - this._offsetY;
 
             if( this['on' + e.type] != undefined ) {
-                alert(1);
                 this['on' + e.type](e);
             }
-            
             var listeners = this._listeners[e.type];
 
             if( listeners != undefined ) {

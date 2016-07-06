@@ -217,9 +217,9 @@
 
             var prototype = this.getPrototype();
 
-            prototype._collectionTarget.forEach(function(c) {
-                c.collection.push(this);
-            }, this);
+            //prototype._collectionTarget.forEach(function(c) {
+            //    c.collection.push(this);
+            //}, this);
 
             this._isContainedInCollection = true;
         },

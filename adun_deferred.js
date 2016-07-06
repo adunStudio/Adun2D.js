@@ -52,7 +52,7 @@
             try {
                 received = queue._success(arg);
             } catch(e) {
-                return queue.fail(arg);
+                return queue.fail(e);
             }
 
             if( received instanceof adun.Deferred ) {
@@ -75,9 +75,10 @@
                 result = queue._fail(arg);
                 queue.call(result);
             } else if( arg instanceof Error ) {
+                //arg.stackTrace();
                 throw arg;
             } else {
-                error = new Error('failed in Deferred');
+                error = new Error('faild in Deferred');
                 error.arg = arg;
                 throw error;
             }

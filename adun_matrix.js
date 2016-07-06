@@ -1,3 +1,4 @@
+
 // #Matrix
 (function() {
     'use strict';
@@ -5,16 +6,25 @@
     /**
      * Matrix
      * 2D 변환 행렬을 나타낸다.
-     * 다른 좌표 공간 사이에서
+     * HTML canvas transform() Method에 사용.
+     * void ctx.transform(a, b, c, d, e, f)
+     * [a c e]
+     * [b d f]
+     * [0 0 1]
+     * - basic -
+     * [1 0 tx]
+     * [0 1 ty]
+     * [0 0  1]
+     * 
      *
+     * a (m11) => Horizonatal scaling => y축 scale
+     * b (m12) => Horizonatal skewing => y축 rotate
+     * c (m21) => Vertical skewing => x축 rotate
+     * d (m22) => Vertical scaling => x축 scale
+     * e (tx)  => Horizonatal moving => x축 이동
+     * f (ty)  => Vertical moving => y축 이동
      *
-     *
-     * stack[0] = a = 1 => 행렬(0, 0) => scale과 rotate에 영향을 준다.
-     * stack[1] = b = 0 => 행렬(0, 1) => scale과 roate에 영향을 준다.
-     * stack[2] = c = 0 => 행렬(1, 0) => scale과 roate에 영향을 준다.
-     * stack[3] = d = 1 => 행렬(1, 1) => scale과 roate에 영향을 준다.
-     * stack[4] = tx = 0 => 행렬(2, 0) => x축 변환에 영향을 준다.
-     * stack[5] = ty = 0 => 행렬(2, 1) => y축 변환에 영향을 준다.
+     * 번외 행렬 변환
      *
      * [x  x]
      * [y  y]
@@ -58,83 +68,89 @@
      * [0, 1, 1]
      */
 
-
-    var Matrix = ADUN.Matrix = ADUN.Class({
-
+    var Matrix = adun.Matrix = adun.Class({
         init: function() {
             this.reset();
         },
 
         reset: function() {
-           /**
-            * [a    b    tx]
-            * [c    d    ty]
-            *
-            * [1    0    0]
-            * [0    1    0]
-            */
-
+            // ctx.transform(a, b, c, d, e, f)
+            /**
+            * [a c e]
+            * [b d f]
+            * [0 0 1]
+            **/
             this.stack = [];
-            this.stack.push([ 1, 0, 0, 0, 1, 0 ]);
+
+            this.stack.push([1, 0, 0, 0, 1, 0]);
         },
 
         makeTransformMatrix: function(node) {
-            var dest = [];
-
             var x, y, width, height, w, h, rotation, scaleX, scaleY, theta, tmpcos, tmpsin,
-                a11, a12, a21, a22, atx, aty;
+                a, b, c, d, tx, ty, mat = [];
 
             x = node._x;
             y = node._y;
             width = node.width || 0;
             height = node.height || 0;
-            w = ( ADUN.isNumber(node._originX) ) ? node._originX : width / 2;
-            h = ( ADUN.isNumber(node._originY) ) ? node._originY : height / 2;
-            scaleX = ( ADUN.isNumber(node._scaleX) ) ? node._scaleX : 1;          // (|k| > 1) => x -> k배 확대,  (k < 0) => y축 대칭
-            scaleY = ( ADUN.isNumber(node._scaleY) ) ? node._scaleY : 1;          // (|k| > 1) => y -> k백 확대,  (k < 0) => x축 대칭
-            rotation = node._rotation || 0;
+            w = adun.isNumber(node._originX) ? node._originX : width / 2;
+            h = adun.isNumber(node._originY) ? node._originY : height / 2;
+            scaleX = adun.isNumber(node._scaleX) ? node.scaleX : 1;
+            scaleY = adun.isNumber(node._scaleY) ? node.scaleY : 1;
+            rotation = node._roation || 0;
             theta = rotation * Math.PI / 180;
-            tmpcos = Math.cos(theta);            // Math.cos(0) == 1
-            tmpsin = Math.sin(theta);            // Math.sin(0) == 0
+            tmpcos = Math.cos(theta);
+            tmpsin = Math.sin(theta);
 
-            a11 = scaleX * tmpcos; a12 = scaleX * tmpsin; atx = -a11 * w + a21* h + x + w;
-            a21 = scaleY * tmpsin; a22 = scaleY * tmpcos; aty = -a12 * w - a22 * h + y + h;
+            a = scaleX * tmpcos;
+            b = scaleX * tmpsin;
+            c = scaleY * tmpsin;
+            d = scaleY * tmpcos;
+            dx = (-a * w + c * h + x + w);
+            dy = (-b * w - d * h + y + h);
 
-            dest[0] =  a11; dest[1] = a12; dest[2] = atx;
-            dest[3] = -a21; dest[4] = a22; dest[5] = aty;
+            mat[0] = a;
+            mat[1] = b;
+            mat[2] = -c;
+            mat[3] = d;
+            mat[4] = dx;
+            mat[5] = dy;
+
+            return mat;
         },
 
         multiply: function(m1, m2) {
-            var dest = [];
+            var mat = [];
 
-            var a11 = m1[0], a12 = m1[1], atx = m1[2];
-            var a21 = m1[3], a22 = m1[4], aty = m1[5];
+            var a11 = m1[0], a21 = m1[2], adx = m1[4];
+            var a12 = m1[1], a22 = m1[3], ady = m1[5];
 
-            var b11 = m2[0], b12 = m2[1], btx = m2[2];
-            var b21 = m2[3], b22 = m2[4], bty = m2[5];
+            var b11 = m2[0], b21 = m2[2], bdx = m2[4];
+            var b12 = m2[1], b22 = m2[3], bdy = m2[5];
 
-            dest[0] = a11 * b11 + a12 * b21; dest[1] = a11 * b12 + a12 * b22; dest[2] = a11 * btx + a12 * bty + atx;
-            dest[3] = a21 * b12 + a22 * b22; dest[4] = a21 * b12 + a22 * b22; dest[5] = a21 * btx + a22 * bty + aty;
+            mat[0] = a11 * b11 + a21 * b12;
+            mat[1] = a12 * b11 + a22 * b12;
+            mat[2] = a11 * b21 + a21 * b22;
+            mat[3] = a12 * b21 + a22 * b22;
+            mat[4] = a11 * bdx + a21 * bdy + adx;
+            mat[5] = a12 * bdx + a22 * bdy + ady;
 
-            return dest;
+            return mat;
         },
 
-        multiVec: function(mat, vec) {
-            var dest = [];
+        mulitplyVec: function(m, vec) {
+            var mat, x = vec[0], y = vec[1];
+            mat = [];
 
-            var x = vec[0], y = vec[1];
+            var a = m[0], c = m[2], dx = m[4];
+            var b = m[1], d = m[3], dy = m[5];
 
-            var m11 = mat[0], m12 = mat[1], mtx = mat[2];
-            var m21 = mat[3], m22 = mat[4], mty = mat[5];
+            mat[0] = a * x + c * y + dx;
+            mat[1] = b * x + d * y + dy;
 
-
-            dest[0] = m11 * x + m21 * y + mtx;
-            dest[1] = m12 * x + m22 * y + mty;
-
-            return dest;
+            return mat;
         }
     });
 
-
-    ADUN.Matrix.instance = new Matrix();
+    Matrix.instance = new Matrix();
 })();

@@ -30,6 +30,7 @@
 <script src="./adun_heart.js"></script>
 <script src="./adun_map.js"></script>
 <script src="./adun_loadingScene.js"></script>
+<script src="./adun_canvasrenderer.js"></script>
 
 
 
@@ -37,16 +38,20 @@
 
 <script>
 var h = new adun.Heart();
-console.dir(h);
-
 h.preload({
-    one: './imac.png',
-    two: './imac.png',
-    three: './imac.png',
+    pig: './pig.png',
+    pig2: './pig.png',
 });
-h.onload = function() {
-    alert('ddddd');
-}
+h.pump(function() {
+    var pig = new adun.Sprite(32, 32);
+    pig.image = h.assets['pig'];
+    console.dir(pig);
+    h.rootScene.addChild(pig);
+    var pig2 = new adun.Sprite(32, 32);
+    pig2.image = h.assets['pig'];
+    h.rootScene.addChild(pig2);
+
+});
 h.start();
 
 </script>

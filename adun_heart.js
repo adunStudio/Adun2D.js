@@ -253,7 +253,6 @@
                     a = [];
 
                     for( name in assets ) {
-                        console.log(name);
                         if( adun.has(assets, name) ) {
                             a.push([assets[name], name]);
                         }
@@ -331,7 +330,8 @@
             };
 
             this.on(adun.Event.LOAD, function() {
-                alert('dddd');
+                this.popScene();
+                this.currentScene = this.rootScene;
             });
 
             this.currentTime = adun.getTime();
@@ -348,7 +348,7 @@
 
             this._requestNextFrame(0);
 
-            var ret = this._requestPreload().next(function() {
+            var ret = this._requestPreload().next(function(arg) {
                 Heart.loadingScene.emit(new adun.Event(adun.Event.LOAD));
             });
 
@@ -438,7 +438,7 @@
 
 
             nodes = this.currentScene.childNodes.slice();
-
+            console.log(nodes.length);
             while( nodes.length ) {
                 node = nodes.pop();
                 node.age ++;
@@ -466,6 +466,10 @@
 
         getTime: function() {
             return adun.getTime();
+        },
+
+        pump: function(fn) {
+            this.onload = fn;
         },
 
         stop: function() {
@@ -524,7 +528,7 @@
         },
 
         removeScene: function(scene) {
-            if(this.currentScene ==- scene) {
+            if(this.currentScene == scene) {
                 return this.popScene();
             } else {
                 var i = this._scens.indexOf(scene);

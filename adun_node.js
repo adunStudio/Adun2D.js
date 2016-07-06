@@ -111,7 +111,7 @@
                 oy = (adun.isNumber(node._originY)) ? node._originY : nodw._height / 2 || 0;
 
                 vec = [ox, oy];
-                vec = matrix.multiply(newmat, vec);
+                vec = matrix.multiplyVec(newmat, vec);
 
                 node._offsetX = vec[0] - ox;
                 node._offsetY = vec[1] - oy;

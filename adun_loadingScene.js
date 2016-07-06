@@ -8,13 +8,14 @@
 
         init: function() {
             this.super();
+            this.t = 1;
+
 
             this.on(adun.Event.PROGRESS, function(e) {
-                alert(e.total);
             });
 
             this.on(adun.Event.LOAD, function(e) {
-                alert('로딩완료');
+                adun.Heart.instance.emit(new adun.Event(adun.Event.LOAD));
             });
         },
 

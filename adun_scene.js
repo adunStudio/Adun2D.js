@@ -25,17 +25,21 @@
 
             this.on(adun.Event.CHILD_ADDED, this._onchildadded);
             this.on(adun.Event.CHILD_REMOVED, this._onchildremoved);
-            this.on(adun.Event.ENTER, function() {
-
-
-            });
-            //this.on(adun.Event.ENTER, this._onenter);
-            //this.on(adun.Event.EXIT, this._onexit);
-
-            this.on(adun.Event.HEART_RESIZE, this._onHeartResize);
-
+            this.on(adun.Event.ENTER, this._onenter);
+            this.on(adun.Event.EXIT, this._onexit);
 
             var self = this;
+
+            this._dispatchExitframe = function() {
+                var layer;
+
+                for( var prop in self._layers ) {
+                    layer = self._layers[prop];
+                    layer.emit(new adun.Event(adun.Event.EXIT_FRAME));
+                }
+            };
+
+            this.on(adun.Event.HEART_RESIZE, this._onHeartResize);
 
             this._onHeartResize(heart);
 
@@ -144,6 +148,26 @@
             return adun.Heart.instance.removeScene(this);
         },
 
+        _determineEventTarget: function(e) {
+            var layer, target, i;
+
+            for( i = this._layerPriorty.length -1; i > 0; --i ) {
+
+                layer = this._layers[this._layerPriorty[i]];
+                target = layer._determineEventTarget(e);
+
+                if( target ) {
+                    break;
+                }
+            }
+
+            if( !target ) {
+                target = this;
+            }
+
+            return target;
+        },
+
         _onHeartResize: function(e) {
             this._element.style.width = e.width + 'px';
             this.width = e.width;
@@ -157,13 +181,179 @@
         },
 
         addLayer: function(type, i) {
+
             var heart = adun.Heart.instance;
 
             if( this._layers[type] ) {
                 return;
             }
 
+            var layer = new adun[type + 'Layer']();
+
+            if( heart.currentScene === this ) {
+                layer._startRendering();
+            }
+
+            this._layers[type] = latyer;
+
+            var element = layer._element;
+
+            if( isNumber(i) ) {           // if 'Dom' the i = 1  if else 'Canvas' i = 0
+                var nextSibling = this._elemet.childNodes[i];
+
+                if( nextSibling ) {
+                    this._element.insertBefore(element, nextSibling);
+                } else {
+                    this._element.appendChild(element);
+                }
+
+                this._layerPriorty.splice(i, 0, type);
+
+            } else {
+                this._element.appendDhild(element);
+                this._layerPriorty.push(type);
+            }
+
+            layer._scene = this;
+        },
+
+        _onchildadded: function(e) {
+            var child, next, target, i;
+
+            child = e.node;
+            next = e.next;
+
+            if( child._element ) {
+                target = 'Dom';          // Surface || CanvasLayer
+                i = 1;
+            } else {
+                target = 'Canvas';
+                i = 0;
+            }
+
+            if( !this._layers[target] ) {
+                this.addLayer(target, i);
+            }
+
+            child._layer = this._layers[target];
+            this.layers[target].insertBefore(child, next);
+            child.parentNode = this;
+
+        },
+
+        _onchildremoved: function(e) {
+            var child = e.node;
+            child._layer.removeChild(child);
+            child._layer = null;
+        },
+
+        _onenter: function() {
+            for(var type in this._layers) {
+                this._layers[type]._startRendering();
+            }
+
+            adun.Heart.instance.on(adun.Event.EXIT_FRAME, this._dispatchExitframe);
+        },
+
+        _onexit: function() {
+            for(var type in this._layers) {
+                this._layers[type]._stopRendering();
+            }
+
+            adun.Heart.instance.removeEventListener(adun.Event.EXIT_FRAME, this._dispatchExitframe);
         }
 
+    });
+})();
+
+
+
+// #CanvasScene
+(function() {
+    'use strict';
+
+    var CanvasScene = adun.CanvasScene = adun.Class({
+        extend: adun.Scene,
+
+        init: function() {
+            this.super();
+
+            this.addLayer('Canvas');
+        },
+
+        _determineEventTarget: function(e) {
+            var target = this._layers.Canvas._determinEventTarget(e);
+
+            if( !target ) {
+                target = this;
+            }
+
+            return target;
+        },
+
+        _onchildadded: function(e) {
+            var child, next;
+
+            child._layer = this._layers.Canvas;
+            this._layers.Canvas.insertBefore(child, next);
+        },
+
+        _onenter: function() {
+
+            this._layers.Canvas._startRendering();
+            adun.Heart.instance.on(adun.Event.EXIT_FRAME, this._dispatchExitframe);
+        },
+
+        _onexit: function() {
+
+            this._layers.Canvas._stopRendering();
+            adun.Heart.instance.removeEventListener(adun.Event.EXIT_FRAME, this._dispatchExitframe);
+        }
+    });
+})();
+
+
+
+// #DomScene
+(function() {
+    'use strict';
+
+    var DOMScene = adun.DOMScene = adun.Class({
+        extend: adun.Scene,
+
+        init: function() {
+            this.super();
+
+            this.addLayer('Dom');
+        },
+
+        _determineEventTarget: function(e) {
+            var target = this._layers.Dom._determinEventTarget(e);
+
+            if( !target ) {
+                target = this;
+            }
+
+            return target;
+        },
+
+        _onchildadded: function(e) {
+            var child, next;
+
+            child._layer = this._layers.Dom;
+            this._layers.Dom.insertBefore(child, next);
+        },
+
+        _onenter: function() {
+
+            this._layers.Dom._startRendering();
+            adun.Heart.instance.on(adun.Event.EXIT_FRAME, this._dispatchExitframe);
+        },
+
+        _onexit: function() {
+
+            this._layers.Dom._stopRendering();
+            adun.Heart.instance.removeEventListener(adun.Event.EXIT_FRAME, this._dispatchExitframe);
+        }
     });
 })();
