@@ -4,11 +4,12 @@
 
     var Event = adun.Event = adun.Class({
         extend: null,
+        TYPE: 'Event',
 
         init: function(type) {
             this.type = type;   // important!
 
-            this.targent = null;
+            this.target = null;
             this.x = 0;
             this.y = 0;
             this.localX = 0;
@@ -16,7 +17,7 @@
         },
 
         _initPosition: function(pageX, pageY) {
-            var haert = adun.heart.instance;
+            var heart = adun.Heart.instance;
 
             this.x = this.localX = (pageX - heart._pageX) / heart.scale;
             this.y = this.loaclY = (pageY - heart._pageY) / heart.scale;
@@ -87,5 +88,9 @@
 
     // 키가눌러졋을때 heart로 발생한다.
     Event.KEY_DOWN = 'keydown';
+
+    Event.CLICK_START = 'clickstart';
+    Event.CLICK_MOVE = 'clickmove';
+    Event.CLICK_END = 'clickend';
 
 })();

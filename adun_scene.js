@@ -5,6 +5,7 @@
 
     var Scene = adun.Scene = adun.Class({
         extend: adun.Group,
+        TYPE: 'Scene',
 
         init: function() {
             this.super();
@@ -34,6 +35,7 @@
                 var layer;
 
                 for( var prop in self._layers ) {
+
                     layer = self._layers[prop];
                     layer.emit(new adun.Event(adun.Event.EXIT_FRAME));
                 }
@@ -151,8 +153,7 @@
         _determineEventTarget: function(e) {
             var layer, target, i;
 
-            for( i = this._layerPriorty.length -1; i > 0; --i ) {
-
+            for( i = this._layerPriorty.length -1; i >= 0; --i ) {
                 layer = this._layers[this._layerPriorty[i]];
                 target = layer._determineEventTarget(e);
 
@@ -194,14 +195,15 @@
                 layer._startRendering();
             }
 
-            this._layers[type] = latyer;
+            this._layers[type] = layer;
 
             var element = layer._element;
 
-            if( isNumber(i) ) {           // if 'Dom' the i = 1  if else 'Canvas' i = 0
-                var nextSibling = this._elemet.childNodes[i];
+            if( adun.isNumber(i) ) {           // if 'Dom' the i = 1  if else 'Canvas' i = 0
+                var nextSibling = this._element.childNodes[i];
 
                 if( nextSibling ) {
+
                     this._element.insertBefore(element, nextSibling);
                 } else {
                     this._element.appendChild(element);
@@ -210,7 +212,7 @@
                 this._layerPriorty.splice(i, 0, type);
 
             } else {
-                this._element.appendDhild(element);
+                this._element.appendchild(element);
                 this._layerPriorty.push(type);
             }
 
@@ -236,7 +238,7 @@
             }
 
             child._layer = this._layers[target];
-            this.layers[target].insertBefore(child, next);
+            this._layers[target].insertBefore(child, next);
             child.parentNode = this;
 
         },

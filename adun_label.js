@@ -5,6 +5,7 @@
 
     var Label = adun.Label = adun.Class({
         extend: adun.Entity,
+        TYPE: 'Label',
 
         init: function(text) {
             this.super();
@@ -163,7 +164,7 @@
         getMatrics: function(text) {
             var ret = {}, div, width, height;
 
-            
+
         }
 
 

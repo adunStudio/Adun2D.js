@@ -5,6 +5,7 @@
 
     var Sprite = adun.Sprite = adun.Class({
         extend: adun.Entity,
+        TYPE: 'Sprite',
 
         init: function(width, height) {
             this.super();
@@ -159,7 +160,8 @@
             }
         },
 
-        render: function(ctx) {
+        cvsRender: function(ctx) {
+            console.log();
             var image, w, h, iw, ih, elem, sx, sy, sw, sh;
 
             image = this._image;
@@ -178,7 +180,6 @@
                     sy = Math.min(this._frameTop, ih - h);
                     sw = Math.max(0.01, Math.min(iw - sx, w));
                     sh = Math.max(0.01, Math.min(ih - sy, h));
-
                     ctx.drawImage(elem, sx, sy, sw, sh, 0, 0, w, h);
                 }
             }

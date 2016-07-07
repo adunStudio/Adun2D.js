@@ -15,7 +15,7 @@
      * [1 0 tx]
      * [0 1 ty]
      * [0 0  1]
-     * 
+     *
      *
      * a (m11) => Horizonatal scaling => y축 scale
      * b (m12) => Horizonatal skewing => y축 rotate
@@ -69,6 +69,8 @@
      */
 
     var Matrix = adun.Matrix = adun.Class({
+        TYPE: 'Matrix',
+
         init: function() {
             this.reset();
         },
@@ -82,12 +84,12 @@
             **/
             this.stack = [];
 
-            this.stack.push([1, 0, 0, 0, 1, 0]);
+            this.stack.push([1, 0, 0, 1, 0, 0]);
         },
 
         makeTransformMatrix: function(node) {
             var x, y, width, height, w, h, rotation, scaleX, scaleY, theta, tmpcos, tmpsin,
-                a, b, c, d, tx, ty, mat = [];
+                a, b, c, d, dx, dy, mat = [];
 
             x = node._x;
             y = node._y;
@@ -95,9 +97,9 @@
             height = node.height || 0;
             w = adun.isNumber(node._originX) ? node._originX : width / 2;
             h = adun.isNumber(node._originY) ? node._originY : height / 2;
-            scaleX = adun.isNumber(node._scaleX) ? node.scaleX : 1;
-            scaleY = adun.isNumber(node._scaleY) ? node.scaleY : 1;
-            rotation = node._roation || 0;
+            scaleX = adun.isNumber(node._scaleX) ? node._scaleX : 1;
+            scaleY = adun.isNumber(node._scaleY) ? node._scaleY : 1;
+            rotation = node._rotation || 0;
             theta = rotation * Math.PI / 180;
             tmpcos = Math.cos(theta);
             tmpsin = Math.sin(theta);
@@ -138,7 +140,7 @@
             return mat;
         },
 
-        mulitplyVec: function(m, vec) {
+        multiplyVec: function(m, vec) {
             var mat, x = vec[0], y = vec[1];
             mat = [];
 

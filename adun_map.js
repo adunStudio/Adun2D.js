@@ -5,6 +5,7 @@
 
     var Map = adun.Map = adun.Class({
         extend: adun.Entity,
+        TYPE: 'Map',
 
         init: function(tileWidth, tileHeight) {
             this.super();
@@ -27,7 +28,7 @@
 
             this.data = [[[]]];
 
-            this._drity = false;
+            this._dirty = false;
 
             this._tight = false;
 
@@ -38,7 +39,7 @@
             this._listeners[adun.Event.RENDER] = null;
             this.on(adun.Event.RENDER, function() {
 
-                if( this._drity ) {
+                if( this._dirty ) {
                     this._previousOffsetX = this._previousOffsetY = null;
                 }
             });
@@ -96,7 +97,7 @@
 
             this._data = Array.prototype.slice.apply(arguments);
 
-            this._drity = true;
+            this._dirty = true;
 
             this._tight = false;
 

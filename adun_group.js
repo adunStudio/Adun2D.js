@@ -5,6 +5,7 @@
 
     var Group = adun.Group = adun.Class({
         extend: adun.Node,
+        TYPE: 'Group',
 
         init: function() {
             this.super();
@@ -128,6 +129,7 @@
             childAdded.next = null;
 
             this.emit(childAdded);
+
             node.emit(new adun.Event(adun.Event.ADDED));
 
             if( this.scene ) {

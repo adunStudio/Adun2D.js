@@ -5,6 +5,7 @@
 
     var Entity = adun.Entity = adun.Class({
         extend: adun.Node,
+        TYPE: 'Entity',
 
         init: function() {
             this.super();
@@ -12,8 +13,8 @@
             //var heart = adun.Heart.instance;
 
             this._rotation = 0;
-            this._scaleX = 0;
-            this._scaleY = 0;
+            this._scaleX = 1;
+            this._scaleY = 1;
 
             this._toucnEnabled = true;
             this._clipping = false;
@@ -129,6 +130,12 @@
             set: function(visible) {
                 this._visible = visible;
             }
+        },
+
+        scale: function(x, y) {
+            this._scaleX = x;
+            this._scaleY = (y != null) ? y : x;
+            this._drity = true;
         },
 
         // 사각형 충돌

@@ -6,13 +6,14 @@
     // 씬 안에서 보여지는 모든 객체의 부모
     var Node = adun.Node = adun.Class({
         extend: adun.EventTarget,
+        TYPE: 'Node',
 
         init: function() {
             this.super();
 
             this._dirty = false;
 
-            this._matrix = [1, 0, 0, 0, 1, 0];
+            this._matrix = [1, 0, 0, 1, 0, 0];
 
             this._x = 0;
             this._y = 0;

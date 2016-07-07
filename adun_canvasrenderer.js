@@ -3,7 +3,9 @@
 (function() {
     'use strict';
 
+var a = 1;
     var CanvasRenderer = adun.CanvasRenderer = adun.Class({
+        TYPE: 'CanvasRenderer',
 
         render: function(ctx, node, e) {
             var width, height, child;
@@ -14,7 +16,7 @@
 
             this.transform(ctx, node);
 
-            if( adun.isUndefind(noe._visible) || node._visible ) {
+            if( adun.isUndefined(node._visible) || node._visible ) {
 
                 width = node.width;
                 height = node.height;
@@ -34,7 +36,7 @@
                     node.cvsRender(ctx);
                 }
 
-                if( adun.Heart.instanc._debug && node._debugColor ) {
+                if( adun.Heart.instance._debug && node._debugColor ) {
                     ctx.strokeStyle = node._debugColor;
                     ctx.strokeRect(0, 0, width, height);
                 }
@@ -58,10 +60,10 @@
             adun.Matrix.instance.stack.pop();
         },
 
-        detectRender: function(ctx, node) {
+        detectRender: function(ctx, node, e) {
             var width, height, child;
 
-            if( adun.isUndefind(noe._visible) || node._visible ) {
+            if( adun.isUndefined(node._visible) || node._visible ) {
 
                 width = node.width;
                 height = node.height;
@@ -83,29 +85,29 @@
                     }
                 }
 
-                ctx.resotre();
+                ctx.restore();
 
                 adun.Matrix.instance.stack.pop();
 
             }
         },
 
-        transfrom: function(ctx, node) {
-            var martrix, stack, newmat, ox, oy, vec;
+        transform: function(ctx, node) {
+            var matrix, stack, newmat, ox, oy, vec;
 
-            matrix = adun.Matirx.instace;
+            matrix = adun.Matrix.instance;
             stack = matrix.stack;
 
             if( node._dirty ) {
 
-                node._cvsCache.Matrix = matrix.makeTransformMatrix(node);
+                node._cvsCache.matrix = matrix.makeTransformMatrix(node);
 
                 newmat = matrix.multiply(stack[stack.length -1], node._cvsCache.matrix);
 
                 node._matrix = newmat;
 
-                ox = adun.isNumber(node._originX) ? node._originX : nodw._width / 2 || 0;
-                oy = adun.isNumber(node._originY) ? node._originY : nodw._height / 2 || 0;
+                ox = adun.isNumber(node._originX) ? node._originX : node._width / 2 || 0;
+                oy = adun.isNumber(node._originY) ? node._originY : node._height / 2 || 0;
 
                 vec = matrix.multiplyVec(newmat, [ox, oy]);
 
@@ -122,5 +124,5 @@
         }
     });
 
-    CanvasRenderer.instace = new adun.CanvasRenderer();
+    CanvasRenderer.instance = new adun.CanvasRenderer();
 })();

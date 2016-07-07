@@ -5,6 +5,7 @@
 
     var LoadingScene = adun.LoadingScene = adun.Class({
         extend: adun.Scene,
+        TYPE: 'LoadingScene',
 
         init: function() {
             this.super();
@@ -15,7 +16,10 @@
             });
 
             this.on(adun.Event.LOAD, function(e) {
-                adun.Heart.instance.emit(new adun.Event(adun.Event.LOAD));
+                var heart = adun.Heart.instance;
+
+                heart.removeScene(heart.loadingScene);
+                heart.emit(new adun.Event(adun.Event.LOAD));
             });
         },
 

@@ -5,6 +5,7 @@
 
     var Surface = adun.Surface = adun.Class({
         extend: adun.EventTarget,
+        TYPE: 'Surface',
 
         init: function(width, height) {
             this.super();

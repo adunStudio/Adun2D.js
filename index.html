@@ -31,27 +31,46 @@
 <script src="./adun_map.js"></script>
 <script src="./adun_loadingScene.js"></script>
 <script src="./adun_canvasrenderer.js"></script>
+<script src="./adun_canvaslayer.js"></script>
+<script src="./adun_detectcolormanager.js"></script>
 
 
 
 
 
 <script>
-var h = new adun.Heart();
-h.preload({
+var Heart = new adun.Heart();
+Heart.scale = 1;
+Heart.preload({
     pig: './pig.png',
-    pig2: './pig.png',
 });
-h.pump(function() {
+
+Heart.pump(function() {
     var pig = new adun.Sprite(32, 32);
-    pig.image = h.assets['pig'];
-    console.dir(pig);
-    h.rootScene.addChild(pig);
+    pig.image = Heart.assets['pig'];
+    pig.frame = [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4];
+    pig.scale(-1,1);
+    Heart.rootScene.addChild(pig);
+
     var pig2 = new adun.Sprite(32, 32);
-    pig2.image = h.assets['pig'];
-    h.rootScene.addChild(pig2);
+    pig2.image = Heart.assets['pig'];
+    pig2.frame = [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4];
+    pig2.scale(-1,1);
+    Heart.rootScene.addChild(pig2);
+
+    Heart.on('enterframe', function() {
+        pig.x += 1;
+    });
+    console.dir(pig._cvsCache)
+    console.dir(pig2._cvsCache)
+
+
+    pig.on('clickstart', function() {
+    })
+
 
 });
-h.start();
+
+Heart.start();
 
 </script>

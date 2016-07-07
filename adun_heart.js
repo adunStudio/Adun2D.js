@@ -10,6 +10,7 @@
 
     adun.Heart = adun.Class({
         extend: adun.EventTarget,
+        TYPE: 'Heart',
 
         init: function(width, height) {
 
@@ -110,9 +111,11 @@
             this.currentScene = null;
 
             this.rootScene = new adun.Scene();
+            this.rootScene.aaaaaaaaaaaaaaaaaa= 1;
             this.pushScene(this.rootScene);
 
             this.loadingScene = new adun.LoadingScene();
+            this.loadingScene.aaaaaaaaaaa= 1;
 
             this._activated = false;
 
@@ -146,19 +149,35 @@
 
                 }, true);
 
+                this._clickEventTarget = {};
+
                 stage.addEventListener('mousedown', function(e) {
+                    var event, target;
 
-                    var tagName = (e.target.tagName).toLowerCase();
+                    event = new adun.Event(adun.Event.CLICK_START);
+                    event._initPosition(e.pageX, e.pageY);
 
-                    if( adun.ENV.DEFALUT_TAGS.indexOf(tagName) === -1 ) {
-                        e.preventDefault();
+                    target = Heart.currentScene._determineEventTarget(event);
 
-                        Heart._mousedownID ++;
+                    Heart._clickEventTarget[Heart._mousedownID] = target;
 
-                        if( !Heart.running ) {
-                            e.stopPropagation();
-                        }
-                    }
+                    console.log(target == adun.Heart.instance.currentScene);
+                    target.emit(event);
+
+
+
+
+                    // var tagName = (e.target.tagName).toLowerCase();
+                    //
+                    // if( adun.ENV.DEFALUT_TAGS.indexOf(tagName) === -1 ) {
+                    //     e.preventDefault();
+                    //
+                    //     Heart._mousedownID ++;
+                    //
+                    //     if( !Heart.running ) {
+                    //         e.stopPropagation();
+                    //     }
+                    // }
 
                 }, true);
 
@@ -325,14 +344,11 @@
         start: function(deferred) {
 
             var onloadTimeSetter = function() {
-                //this.frame = 0;
-                //this.removeEventListener(adun.Event.LOAD, onloadTimeSetter);
+                this.frame = 0;
+                this.removeEventListener(adun.Event.LOAD, onloadTimeSetter);
             };
 
-            this.on(adun.Event.LOAD, function() {
-                this.popScene();
-                this.currentScene = this.rootScene;
-            });
+            this.on(adun.Event.LOAD, onloadTimeSetter);
 
             this.currentTime = adun.getTime();
 
@@ -438,7 +454,7 @@
 
 
             nodes = this.currentScene.childNodes.slice();
-            console.log(nodes.length);
+
             while( nodes.length ) {
                 node = nodes.pop();
                 node.age ++;
@@ -531,10 +547,10 @@
             if(this.currentScene == scene) {
                 return this.popScene();
             } else {
-                var i = this._scens.indexOf(scene);
+                var i = this._scenes.indexOf(scene);
                 if( i !== -1 ) {
                     this._scenes.splice(i, 1);
-                    this._element.removeChild(scene._element);
+                    this._element.removeChild(_scene._element);
                     return scene;
                 } else {
                     return null;

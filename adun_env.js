@@ -78,7 +78,10 @@
 
         IMAGE: ['jpg', 'jpeg', 'gif', 'png', 'bmp'],
 
-        SOUND: ['mp3', 'aac', 'm4a', 'wav', 'ogg']
+        SOUND: ['mp3', 'aac', 'm4a', 'wav', 'ogg'],
+
+        // 디텍션 영역 => (COLOR_DETECTION_LEVEL * 2 + 1)px square
+        COLOR_DETECTION_LEVEL: 2
 
     };
 })();

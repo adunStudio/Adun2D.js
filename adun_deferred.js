@@ -4,6 +4,7 @@
 
     var Deferred = adun.Deferred = adun.Class({
         extend: null,
+        TYPE: 'Deferred',
 
         init: function() {
             this._success   =   this._fail   =   this._id   = null;

@@ -4,6 +4,7 @@
     // 옵저버 패턴
     var EventTarget = adun.EventTarget = adun.Class({
         extend: null,
+        TYPE: 'EventTarget',
 
         init: function() {
             // 리스너 목록 => 빈 객체
