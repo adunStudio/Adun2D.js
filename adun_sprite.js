@@ -161,7 +161,6 @@
         },
 
         cvsRender: function(ctx) {
-            console.log();
             var image, w, h, iw, ih, elem, sx, sy, sw, sh;
 
             image = this._image;

@@ -39,38 +39,109 @@
 
 
 <script>
-var Heart = new adun.Heart();
+
+var base = [
+  [  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+  [  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+  [  0,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  0,  0],
+  [  0,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  0],
+  [  0,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  0],
+  [  0,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  0],
+  [  0,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  0],
+  [  0,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  0],
+  [  0,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  0],
+  [  0,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  0],
+  [  0,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  0],
+  [  0,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  0,  0],
+  [  0,  2,  2,  2,  2,  2,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+  [  0,  2,  2,  2,  2,  2,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+  [  0,  2,  2,  2,  2,  2,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+  [  0,  2,  2,  2,  2,  2,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0]
+];
+
+var colMap = [
+  [  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+  [  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+  [  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+  [  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+  [  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+  [  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+  [  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+  [  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+  [  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+  [  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+  [  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+  [  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+  [  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+  [  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+  [  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+  [  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0]
+];
+
+var Heart = new adun.Heart(base[0].length * 16, base.length * 16);
 Heart.scale = 1;
+Heart.fps = 30;
 Heart.preload({
-    pig: './pig.png',
+    pig: './img/pig.png',
+    map: './img/map.png'
 });
 
+
+
 Heart.pump(function() {
+    var map = new adun.Map(16, 16);
+    map.image = Heart.assets['map'];
+    map.loadData(base);
+    map.collisionData = colMap;
+
     var pig = new adun.Sprite(32, 32);
     pig.image = Heart.assets['pig'];
     pig.frame = [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4];
     pig.scale(-1,1);
-    Heart.rootScene.addChild(pig);
 
     var pig2 = new adun.Sprite(32, 32);
     pig2.image = Heart.assets['pig'];
     pig2.frame = [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4];
     pig2.scale(-1,1);
+
+    pig.x = 16;
+    pig.y = 16;
+
+    pig2.x = 128;
+    pig2.y = 128;
+
+
+    Heart.rootScene.addChild(map);
     Heart.rootScene.addChild(pig2);
+    Heart.rootScene.addChild(pig);
+
 
     Heart.on('enterframe', function() {
-        pig.x += 1;
-    });
-    console.dir(pig._cvsCache)
-    console.dir(pig2._cvsCache)
 
+            if( Heart.input.right ) {
+                pig.x += 1;
+            }
+            if( Heart.input.left ) {
+                    pig.x -= 1;
+            }
+            if( Heart.input.up ) {
+                pig.y -= 1;
+            }
+            if( Heart.input.down ) {
+                pig.y += 1;
+            }
+
+            if( pig.intersect(pig2) ) {
+                alert('충돌!');
+            }
+    });
 
     pig.on('clickstart', function() {
-    })
+        pig.x += 1;
+    });
 
 
 });
 
-Heart.start();
-
+Heart.debug();
 </script>

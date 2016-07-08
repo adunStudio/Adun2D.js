@@ -16,7 +16,7 @@
             this._scaleX = 1;
             this._scaleY = 1;
 
-            this._toucnEnabled = true;
+            this._clickEnabled = true;
             this._clipping = false;
 
             this._originX = null;
@@ -30,6 +30,7 @@
             this._opacity = 1;
             this._visible = true;
             this._buttonMode = null;
+
 
             this._style = {};
             this._styleStatus = {};
@@ -119,7 +120,7 @@
                 return this._opacity;
             },
             set: function(opacity) {
-                this._opactiy = parseFloat(opacity);
+                this._opacity = parseFloat(opacity);
             }
         },
 
@@ -155,7 +156,7 @@
 
 
 
-        intersectOne: function(other) {
+        _intersectOne: function(other) {
             if( this._dirty ) {
                 this._updateCoordinate();
             }
@@ -180,10 +181,12 @@
                 distance = (this.width + this.height + other.width + other.height) / 4;
             }
 
-            var tmp;
+            var x, y;
 
-            return (tmp = this._offsetX - other.offsetX + (this.width - other.width) / 2) * tmp +
-                   (tmp = this._offsetY - other.offsetY + (this.height - other.height) / 2) * tmp < distance * distance;
+            x = this._offsetX - other._offsetX + (this.width - other.width) / 2;
+            y = this._offsetY - other._offsetY + (this.height - other.height) / 2;
+
+            return x * x + y * y < distance * distance;
         },
 
         enableCollection: function() {
@@ -224,9 +227,9 @@
 
             var prototype = this.getPrototype();
 
-            //prototype._collectionTarget.forEach(function(c) {
-            //    c.collection.push(this);
-            //}, this);
+        //    prototype._collectionTarget.forEach(function(c) {
+        //        c.collection.push(this);
+        //    }, this);
 
             this._isContainedInCollection = true;
         },
@@ -306,5 +309,6 @@
 
         return ret;
     }
+
 
 })();

@@ -192,13 +192,11 @@
                 ctx.clearRect(0, 0, this.width, this.height);
                 adun.CanvasRenderer.instance.detectRender(ctx, this);
                 this._lastDetected = heart.frame;
-
             }
 
             extra = adun.ENV.COLOR_DETECTION_LEVEL - 1;
             rgba = ctx.getImageData(x - extra, y - extra, 1 + extra * 2, 1 + extra * 2).data;
 
-            console.dir(rgba);
             return this._colorManager.getSpriteByColors(rgba);
 
         }

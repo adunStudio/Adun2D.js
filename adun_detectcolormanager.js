@@ -54,7 +54,7 @@
         _decodeDetectColor: function(color, i) {
             i = i || 0;
             var C = this.colorResoultion;
-            console.dir(C);
+
             return ~~(color[i] * C * C * C / 256) + ~~(color[i + 1] * C * C / 256) + ~~(color[i + 2] * C / 256);
         },
 
@@ -67,6 +67,7 @@
 
             score = 0;
             found = {};
+
 
             for( i = 0, len = rgba.length; i < len; i += 4 ) {
                 id = this._decodeDetectColor(rgba, i);

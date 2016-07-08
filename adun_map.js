@@ -32,7 +32,7 @@
 
             this._tight = false;
 
-            this.touchEnabled = false;
+            this.clickEnabled = false;
 
             this.collisionData = null;
 
@@ -50,7 +50,7 @@
             get: function() {
                 return this._image;
             },
-            set: function() {
+            set: function(image) {
                 this._image = image;
                 this.dirty = true;
             }
@@ -88,7 +88,7 @@
 
         height: {
             get: function() {
-                return this._tileHeight * this_data[0].length;
+                return this._tileHeight * this._data[0].length;
             }
         },
 
@@ -148,8 +148,8 @@
 
             var width, height, tileWidth, tileHeight, i, len, data, n;
 
-            width = this._iamge.width;
-            height = this._iamge.height;
+            width = this._image.width;
+            height = this._image.height;
 
             tileWidth = this._tileWidth || width;
             tileHeight = this._tileHeight || height;
@@ -210,12 +210,13 @@
 
                         if( 0 <= n && n < row * col ) {
                             var sx = (n % row) * tileWidth;
-                            var xy = (n / row | 0) * tileHeight;
+                            var sy = (n / row | 0) * tileHeight;
                             context.drawImage(
                                 source,
                                 sx, sy, tileWidth, tileHeight,
                                 x * tileWidth - dx, y * tileHeight - dy, tileWidth, tileHeight
                             );
+                            //console.log(sx, sy, tileWidth, tileHeight, x * tileWidth - dx, y  * tileHeight - dy, tileWidth, tileHeight)
                         }
                     }
                 }
@@ -226,7 +227,7 @@
             if( this._visible === undefined || this._visible ) {
                 var heart = adun.Heart.instance;
 
-                if( this._diry || this.previousOffsetX == null) {
+                if( this._dirty || this.previousOffsetX == null) {
 
                     this.redraw(0, 0, heart.width, heart.height);
 
@@ -295,9 +296,9 @@
             if( this.width !== 0 && this.height !== 0 ) {
                 var heart = adun.Heart.instance;
                 this.updateBuffer();
-                cxt.save();
-                cxt.setTransform(1, 0, 0, 1, 0, 0);
-                ctx.drawImage(this._context.canvas, heart.width, heart.height);
+                ctx.save();
+                //ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.drawImage(this._context.canvas, 0, 0, heart.width, heart.height);
                 ctx.restore();
             }
         }

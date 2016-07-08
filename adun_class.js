@@ -1,7 +1,6 @@
 // #Class
 (function() {
     'use strict';
-var a = 1;
     var Class = adun.Class = function(definition) {
 
         if( definition == null ) {

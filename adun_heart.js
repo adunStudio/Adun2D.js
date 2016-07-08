@@ -161,12 +161,7 @@
 
                     Heart._clickEventTarget[Heart._mousedownID] = target;
 
-                    console.log(target == adun.Heart.instance.currentScene);
                     target.emit(event);
-
-
-
-
                     // var tagName = (e.target.tagName).toLowerCase();
                     //
                     // if( adun.ENV.DEFALUT_TAGS.indexOf(tagName) === -1 ) {
@@ -498,6 +493,11 @@
             this.ready = false;
         },
 
+        debug: function() {
+            this._debug = true;
+            return this.start();
+        },
+
         resume: function() {
             if( this.ready ) {
                 return;
@@ -559,7 +559,6 @@
         },
 
         _buttonListener: function(e) {
-            console.dir(e);
             this.currentScene.emit(e);
         },
 

@@ -72,6 +72,14 @@ var a = 1;
                 this.transform(ctx, node);
                 ctx.fillStyle = node._cvsCache.detectColor;
 
+                if( node._clickEnabled ) {
+                    if( node.detectRender ) {
+                        node.detectRender(ctx);
+                    } else {
+                        ctx.fillRect(0, 0, width, height);
+                    }
+                }
+
                 if( node._clipping ) {
                     ctx.beginPath();
                     ctx.rect(0, 0, width, height);
