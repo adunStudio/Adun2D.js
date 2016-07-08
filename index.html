@@ -13,33 +13,7 @@
 </body>
 </html>
 <script src="./adun.js"></script>
-<script src="./adun_utils.js"></script>
-<script src="./adun_class.js"></script>
-<script src="./adun_deferred.js"></script>
-<script src="./adun_env.js"></script>
-<script src="./adun_event.js"></script>
-<script src="./adun_eventtarget.js"></script>
-<script src="./adun_matrix.js"></script>
-<script src="./adun_input.js"></script>
-<script src="./adun_node.js"></script>
-<script src="./adun_group.js"></script>
-<script src="./adun_entity.js"></script>
-<script src="./adun_sprite.js"></script>
-<script src="./adun_surface.js"></script>
-<script src="./adun_scene.js"></script>
-<script src="./adun_heart.js"></script>
-<script src="./adun_map.js"></script>
-<script src="./adun_loadingScene.js"></script>
-<script src="./adun_canvasrenderer.js"></script>
-<script src="./adun_canvaslayer.js"></script>
-<script src="./adun_detectcolormanager.js"></script>
-
-
-
-
-
 <script>
-
 var base = [
   [  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
   [  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
@@ -110,10 +84,16 @@ Heart.pump(function() {
     pig2.x = 128;
     pig2.y = 128;
 
+    var label = new adun.Label('김나와라뚝딱뚝딱 맛잇는소리<br>ddd');
+    label.width = 30;
+    label.textAlign = 'left';
+
+
 
     Heart.rootScene.addChild(map);
     Heart.rootScene.addChild(pig2);
     Heart.rootScene.addChild(pig);
+    Heart.rootScene.addChild(label);
 
 
     Heart.on('enterframe', function() {
@@ -135,6 +115,10 @@ Heart.pump(function() {
                 alert('충돌!');
             }
     });
+
+
+
+
 
     pig.on('clickstart', function() {
         pig.x += 1;

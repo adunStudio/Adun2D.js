@@ -1,7 +1,5 @@
 
 // 게임을 움직이는 핵심 로직
-
-
 // #Heart
 (function() {
     'use strict';
