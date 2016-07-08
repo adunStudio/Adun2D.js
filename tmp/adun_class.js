@@ -53,3 +53,34 @@
         return Class;
     };
 })();
+
+
+// -----------------------------------
+
+var Person = adun.Class({
+    init: function(name, id, age) {
+        this.name = name;
+        this._id = id;
+    },
+    id: {
+        set: function() {},
+        get: function() {
+            return this._id;
+        }
+    },
+    talk: function() {
+        alert('제 이름은 ' + this.name + "입니다.");
+    }
+});
+var Student = adun.Class({
+    extend: Person,
+    init: function(name, id, age) {
+        this.super(name, id);
+        this.age = age;
+    },
+    talk: function() {
+        alert('제 이름은 ' + this.name + "이고 나이는 " + this.age + "입니다.");
+    }
+});
+var p = new Student('아둔', '940101', 25);
+console.log(p instanceof Person);

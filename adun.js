@@ -11,7 +11,7 @@
  *  adun.js
  *  http://oppacoding.com
  *
- *  Version: 1.0.0
+ *  Version: 0.1.2
  *  Create by ADUNStudio
  *  https://github.com/ADUNStudio
  *  MIT-style license
@@ -40,7 +40,7 @@
 (function(global) {
     'use strict';
     var adun = {
-        ADUN_VESION: '1.0.0'
+        ADUN_VESION: '0.1.2'
         // BASIC_COMPLETE_VERSION
     };
 
