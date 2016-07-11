@@ -63,7 +63,7 @@
             get: function() {
                 return this._y;
             },
-            set: function(x) {
+            set: function(y) {
                 this._y = y;
                 for( var type in this._layers ) {
                     this._layers[type].y = y;

@@ -276,6 +276,9 @@
         if( definition == null ) {
             throw new Error('definition is undefined (adun.Class)');
         }
+        if( !definition.TYPE ) {
+            throw new Error('definition.TYPE is undefined (adun.Class)');
+        }
 
         var name, extend = definition.extend;
         var prototype = {};
@@ -315,6 +318,11 @@
         var Class = function() {
             if( this.init && arguments[0] !== '!ADUN.INIT' ) {
                 this.init.apply(this, arguments);
+            }
+            if( !this.objType ) {
+                this.objType = function() {
+                    return this.TYPE;
+                }
             }
         };
         Class.prototype = Object.create(prototype, definition);
@@ -938,6 +946,7 @@
 
     var InputManager = adun.InputManager = adun.Class({
         extend: adun.EventTarget,
+        TYPE: 'InputManager',
 
         init: function(valueStore, source) {
             this.super();
@@ -1012,6 +1021,7 @@
 
     var BinaryInputManager = adun.BinaryInputManager = adun.Class({
         extend: adun.InputManager,
+        TYPE: 'BinaryInputManager',
 
         init: function(valueStore, activeEventNameSuffix, inactiveEventNameSuffix, source) {
             this.super(valueStore, source);
@@ -1088,6 +1098,7 @@
 
     var KeyboardInputManager = adun.KeyboardInputManager = adun.Class({
         extend: adun.BinaryInputManager,
+        TYPE: 'KeyboardInputManager',
 
         init: function(domElement, flagStore) {
             this.super(flagStore, 'buttondown', 'buttonup');
@@ -1132,6 +1143,7 @@
 
     var InputSource = adun.InputSource = adun.Class({
         extend: adun.EventTarget,
+        TYPE: 'InputSource',
 
         init: function(id) {
             this.super();
@@ -1155,6 +1167,7 @@
 
     var KeyboardInputSource = adun.KeyboardInputSource = adun.Class({
         extend: adun.InputSource,
+        TYPE: 'KeyboardInputSource',
 
         init: function(keyCode) {
             this.super(keyCode);
@@ -1834,7 +1847,7 @@
             }
 
             if( this.childNodes ) {
-                var i, chileNodes = this.chindNodes.slice();
+                var i, childNodes = this.childNodes.slice();
                 for( i = childNodes.length -1; i > 0; --i ) {
                     childNodes[i].remove();
                 }
@@ -2424,7 +2437,6 @@
                                 sx, sy, tileWidth, tileHeight,
                                 x * tileWidth - dx, y * tileHeight - dy, tileWidth, tileHeight
                             );
-                            //console.log(sx, sy, tileWidth, tileHeight, x * tileWidth - dx, y  * tileHeight - dy, tileWidth, tileHeight)
                         }
                     }
                 }
@@ -2440,7 +2452,6 @@
                     this.redraw(0, 0, heart.width, heart.height);
 
                 } else if( this.offsetX !== this._previousOffsetX || this._offsetY !== this._previousOffsetY ) {
-
                     if(this._tight) {
                                                                 // 오른쪽으로 한칸 이동했다고 친다 (타일셋은 30px)
                         var x  = -this._offsetX;                // 현재 -60
@@ -2476,9 +2487,9 @@
                             }
 
                             if( heart._buffer == null ) {
-                                heart_buffer = document.createElement('canvas');
-                                heart_buffer.width = this._context.canvas.width;
-                                heart_buffer.height = this._context.canvas.width;
+                                heart._buffer = document.createElement('canvas');
+                                heart._buffer.width = this._context.canvas.width;
+                                heart._buffer.height = this._context.canvas.width;
                             }
 
                             var context = heart._buffer.getContext('2d');
@@ -2870,15 +2881,15 @@
                         buf = '';
                         increase = amount;
 
-                        length = 0;
+                        len = 0;
 
                         while( increase > 0 ) {
                             if( ctx.measureText(buf).width < labelWidth ) {
-                                length += increase;
-                                buf = text.slice(c, c + length);
+                                len += increase;
+                                buf = text.slice(c, c + len);
                             } else {
-                                length -= increase;
-                                buf = text.slice(c, c + length);
+                                len -= increase;
+                                buf = text.slice(c, c + len);
                             }
 
                             increase = increase / 2 | 0;
@@ -2886,7 +2897,7 @@
 
                         ctx.fillText(buf, 0, y);
                         y += line.height - 1;
-                        c += length;
+                        c += len;
                     }
 
                     buf = text.slice(c, c + text.length);
@@ -3297,6 +3308,8 @@
             set: function(x) {
                 this._x = x;
                 for( var type in this._layers ) {
+                    console.log(type)
+
                     this._layers[type].x = x;
                 }
             }
@@ -3306,7 +3319,7 @@
             get: function() {
                 return this._y;
             },
-            set: function(x) {
+            set: function(y) {
                 this._y = y;
                 for( var type in this._layers ) {
                     this._layers[type].y = y;
@@ -3519,6 +3532,7 @@
 
     var CanvasScene = adun.CanvasScene = adun.Class({
         extend: adun.Scene,
+        TYPE: 'CanvasScene',
 
         init: function() {
             this.super();
@@ -3565,6 +3579,7 @@
 
     var DOMScene = adun.DOMScene = adun.Class({
         extend: adun.Scene,
+        TYPE: 'DOMScene',
 
         init: function() {
             this.super();
@@ -3635,7 +3650,7 @@
     'use strict';
 
     var DetectColorManager = adun.DetectColorManager = adun.Class({
-        TYPE: DetectColorManager,
+        TYPE: 'DetectColorManager',
 
         init: function(reso, max) {
             this.reference = [];
@@ -3739,7 +3754,6 @@
             this._element = document.createElement('canvas');
             this._element.style.position = 'absolute';
             this._element.style.left = this._element.style.top = '0px';
-            this.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa= 1;
 
             this._detect = document.createElement('canvas');
             this._detect.style.position = 'absolute';

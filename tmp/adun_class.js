@@ -6,6 +6,9 @@
         if( definition == null ) {
             throw new Error('definition is undefined (adun.Class)');
         }
+        if( !definition.TYPE ) {
+            throw new Error('definition.TYPE is undefined (adun.Class)');
+        }
 
         var name, extend = definition.extend;
         var prototype = {};
@@ -46,6 +49,11 @@
             if( this.init && arguments[0] !== '!ADUN.INIT' ) {
                 this.init.apply(this, arguments);
             }
+            if( !this.objType ) {
+                this.objType = function() {
+                    return this.TYPE;
+                }
+            }
         };
         Class.prototype = Object.create(prototype, definition);
         Class.constructor = adun.Class;
@@ -58,6 +66,8 @@
 // -----------------------------------
 
 var Person = adun.Class({
+    TYPE: 'Person',
+
     init: function(name, id, age) {
         this.name = name;
         this._id = id;
@@ -72,8 +82,11 @@ var Person = adun.Class({
         alert('제 이름은 ' + this.name + "입니다.");
     }
 });
+
 var Student = adun.Class({
     extend: Person,
+    TYPE: 'Student',
+
     init: function(name, id, age) {
         this.super(name, id);
         this.age = age;
@@ -82,5 +95,5 @@ var Student = adun.Class({
         alert('제 이름은 ' + this.name + "이고 나이는 " + this.age + "입니다.");
     }
 });
-var p = new Student('아둔', '940101', 25);
-console.log(p instanceof Person);
+
+var p = new Student('아둔', '940101', 23);

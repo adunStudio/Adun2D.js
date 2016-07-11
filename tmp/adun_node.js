@@ -68,7 +68,7 @@
             }
 
             if( this.childNodes ) {
-                var i, chileNodes = this.chindNodes.slice();
+                var i, childNodes = this.childNodes.slice();
                 for( i = childNodes.length -1; i > 0; --i ) {
                     childNodes[i].remove();
                 }

@@ -2,34 +2,3 @@
     "-W041": false,
     "-W083": true
 }
-var Person = Class({
-    init: function(name, id, age) {
-        this.name = name;
-        this.id = id;
-    },
-
-    id: {
-        set: null,
-        get: function() {
-            return this.id;
-        }
-    }
-
-
-    talk: function() {
-        alert('제 이름은 ' + this.name + "입니다.");
-    }
-});
-
-var Student = Class({
-    extend: Person,
-
-    init: function(name, id, age) {
-        this.super(name, id);
-        this.age = age;
-    },
-
-    talk: function() {
-        alert('제 이름은 ' + this.name + "이고 나이는 " + this.age + "입니다.");
-    }
-});

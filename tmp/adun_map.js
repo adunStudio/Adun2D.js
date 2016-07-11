@@ -227,7 +227,7 @@
             if( this._visible === undefined || this._visible ) {
                 var heart = adun.Heart.instance;
 
-                if( this._dirty || this.previousOffsetX == null) {
+                if( this._dirty || this._previousOffsetX == null) {
 
                     this.redraw(0, 0, heart.width, heart.height);
 
@@ -268,9 +268,9 @@
                             }
 
                             if( heart._buffer == null ) {
-                                heart_buffer = document.createElement('canvas');
-                                heart_buffer.width = this._context.canvas.width;
-                                heart_buffer.height = this._context.canvas.width;
+                                heart._buffer = document.createElement('canvas');
+                                heart._buffer.width = this._context.canvas.width;
+                                heart._buffer.height = this._context.canvas.width;
                             }
 
                             var context = heart._buffer.getContext('2d');
