@@ -452,6 +452,325 @@
         }
     });
 
+    // #Rectangle
+    var Rectangle = Geom.Rectangle = adun.Class({
+        TYPE: 'Rectangle',
+
+        init: function(x, y, width, height) {
+            x = adun.isNumber(x) ? x : 0;
+            y = adun.isNumber(y) ? y : 0;
+            width = adun.isNumber(width) ? width : 0;
+            height = adun.isNumber(height) ? height : 0;
+
+            this.x = 0;
+            this.y = 0;
+            this.width = 0;
+            this.height = 0;
+
+            this.setTo(x, y, width, height);
+        },
+
+        bottom: {
+            get: function() {
+                return this.y + this.height;
+            },
+            set: function(bottom) {
+                if( bottom ) {
+                    if( bottom < this.y ) {
+                        this.height = 0;
+                    } else {
+                        this.height = value;
+                    }
+                }
+            }
+        },
+
+        center: {
+            get: function() {
+                var output = new Geom.Point();
+                return output.setTo(Math.round(this.width / 2), Math.round(this.height / 2));
+            }
+        },
+
+        bottomRight: {
+            get: function() {
+                var output = new Geom.Point();
+                return output.setTo(this.right, this.bottom);
+            },
+            set: function(value) {
+                if( value ) {
+                    this.right = value.x;
+                    this.bottom = value.y;
+                }
+            }
+        },
+
+        left: {
+            get: function() {
+                return this.x;
+            },
+            set: function(value) {
+                if( value ) {
+                    var diff = this.x - value;
+                    if( this.width + diff < 0 ) {
+                        this.width = 0;
+                        this.x = value;
+                    } else {
+                        this.width += diff;
+                        this.x = value;
+                    }
+                }
+            }
+        },
+
+        right: {
+            get: function() {
+                return this.x + this.width;
+            },
+            set: function(value) {
+                if( value ) {
+                    if( value < this.x ) {
+                        this.width = 0;
+                    } else {
+                        this.width = value - this.x;
+                    }
+                }
+            }
+        },
+
+        size: {
+            get: function() {
+                var output = new Geom.Point();
+                return output.setTo(this.width, this.height);
+            }
+        },
+
+        volume: {
+            get: function() {
+                return this.width * this.height;
+            }
+        },
+
+        // 둘레
+        perimeter: {
+            get: function() {
+                return (this.width * 2) + (this.height * 2);
+            }
+        },
+
+        top: {
+            get: function() {
+                return this.y;
+            },
+            set: function(value) {
+                if( value ) {
+                    var diff = this.y - value;
+                    if( this.height + diff < 0 ) {
+                        this.height = 0;
+                        this.y = value;
+                    } else {
+                        this.height += diff;
+                        this.y = value;
+                    }
+                }
+            }
+        },
+
+        topLeft: {
+            get: function() {
+                var output = new Geom.Point();
+                return output.setTo(this.x, this.y);
+            },
+            set: function(value) {
+                if( value ) {
+                    this.x = value.x;
+                    this.y = value.y;
+                }
+            }
+        },
+
+        clone: function(output) {
+            if( adun.isUndefined(output) ) {
+                output = new Geom.Rectangle();
+            }
+
+            return output.setTo(this.x, this.y, this.width, this.height);
+        },
+
+        contains: function(x, y) {
+            return x >= this.x && x <= this.right && y >= this.y && y <= this.bottom;
+        },
+
+        containsPoint: function(point) {
+            return this.contains(point.x, point.y);
+        },
+
+        containsRect: function(rect) {
+            if( rect.volume > this.volume ) {
+                return false;
+            }
+
+            return rect.x >= this.x && rect.y >= this.y && rect.right <= this.right && rect.bottom <= this.bottom;
+        },
+
+        copyFrom: function(source) {
+            return this.setTo(source.x, source.y, source.width, source.height);
+        },
+
+        copyTo: function(target) {
+            if( adun.isUndefined(target) ) {
+                target = new Geom.Rectangle();
+            }
+
+            return target.copyFrom(this);
+        },
+
+        equals: function(toCompare) {
+            return this.x === toCompare.x && this.y === toCompare.y && this.width === toCompare.width && this.height === toCompare.height;
+        },
+
+        // 부풀리기
+        inflate: function(dx, dy) {
+            if( !isNaN(dx) && !isNaN(dy) ) {
+                this.x -= dx;
+                this.width += 2 * dx;
+                this.y -= dy;
+                this.height += 2 * dy;
+            }
+
+            return this;
+        },
+
+        inflatePoint: function(point) {
+            return this.inflate(point.x, point.y);
+        },
+
+        intersects: function(tointersect) {
+            if( tointersect.x > this.right -1 ) {
+                return false;
+            }
+
+            if( tointersect.right - 1 < this.x ) {
+                return false;
+            }
+
+            if( tointersect.bottom -1 < this.y ) {
+                return false;
+            }
+
+            if( tointersect.y > this.bottom -1 ) {
+                return false;
+            }
+
+            return true;
+        },
+
+        intersection: function(toIntersect, output) {
+            if( adun.isUndefined(output) ) {
+                output = new Geom.Rectangle();
+            }
+
+            if( this.intersect(toIntersect) === true ) {
+                output.x = Math.max(toIntersect.x, this.x);
+                output.y = Math.max(toIntersect.y, this.y);
+                output.width = Math.min(toIntersect.right, this.right) - output.x;
+                output.height = Math.min(toIntersect.bottom, this.bottom) - output.y;
+            }
+
+            return output;
+        },
+
+        overlap: function(rect) {
+            var result = {
+                top: false,
+                bottom: false,
+                left: false,
+                right: false,
+                contains: false,
+                contained: false
+            };
+
+            var interRect = this.intersection(rect);
+
+            if( interRect.isEmpty )
+                return result;
+            if( this.containsRect(rect) )
+                result.contains = true;
+            if( rect.containsRect(this) )
+                result.contained = true;
+            if( this.top < rect.top )
+                result.top = true;
+            if( this.bottom > rect.bottom )
+                result.bottom = true;
+            if( this.left < rect.left )
+                result.left = true;
+            if( this.right > rect.right )
+                result.right = true;
+
+            return result;
+        },
+
+        isEmpty: function() {
+            if( this.width < 1 || this.height < 1 ) {
+                return true;
+            }
+
+            return false;
+        },
+
+        offset: function(dx, dy) {
+            if( !isNaN(dx) && !isNaN(dy) ) {
+                this.x += dx;
+                this.y += dy;
+            }
+
+            return this;
+        },
+
+        offsetPoint: function(point) {
+            return this.offset(point.x, point.y);
+        },
+
+        setEmtpty: function() {
+            return this.setTo(0, 0, 0, 0);
+        },
+
+        setTo: function(x, y, width, height) {
+            if (!isNaN(x) && !isNaN(y) && !isNaN(width) && !isNaN(height)) {
+                this.x = x;
+                this.y = y;
+                if( width >= 0 ) {
+                    this.width = width;
+                }
+                if( height >= 0 ) {
+                    this.height = height;
+                }
+            }
+
+            return this;
+        },
+
+
+        // 합집합
+        union: function(toUnion, output) {
+            if( adun.isUndefined(output) ) {
+                output = new Geom.Rectangle();
+            }
+
+            return output.setTo(Math.min(toUnion.x, this.x), Math.min(toUnion.y, this.y), Math.max(toUnion.right, this.right), Math.max(toUnion.bottom, this.bottom));
+        },
+
+        scale: function(x, y, translation) {
+
+        },
+
+        toString: function() {
+            return "[{Rectangle (x=" + this.x + " y=" + this.y + " width=" + this.width + " height=" + this.height + " isEmpty=" + this.isEmpty() + ")}]";
+        }
+    });
+
+
+    // #Intersect
     var Intersect = Geom.Intersect = adun.Class({
         TYPE: 'Intersect',
 
@@ -685,6 +1004,329 @@
     Point.polar = function(length, angle) {
         return new Geom.Point(length * Math.cos(angle), length * Math.sin(angle));
     }
+
+
+
+    // #Transform
+    var Transform = Geom.Transform = adun.Class({
+        TYPE: 'Transform',
+
+        init: function(x, y, scaleX, scaleY, rotation, rotPointX, rotPointY) {
+            if ( !adun.isNumber(x) ) { x = 0; }
+            if ( !adun.isNumber(y) ) { y = 0; }
+            if ( !adun.isNumber(scaleX) ) { scaleX = 1; }
+            if ( !adun.isNumber(scaleY) ) { scaleY = 1; }
+            if ( !adun.isNumber(rotation) ) { rotation = 0; }
+            if ( !adun.isNumber(rotPointX) ) { rotPointX = 0; }
+            if ( !adun.isNumber(rotPointY) ) { rotPointY = 0; }
+
+            this._x = 0;
+            this._y = 0;
+            this._scaleX = 1;
+            this._scaleY = 1;
+            this._rotation = 0;
+            this._rotPointX = 0;
+            this._rotPointY = 0;
+            this._parent = null;
+            this._locked = false;
+            this._ignoreParent = false;
+            this._ignoreChild = false;
+            this._dirty = true;
+            this.setTransform(x, y, scaleX, scaleY, rotation, rotPointX, rotPointY);
+            this._matrix = new Geom.Matirx();
+            this._cachedConcatenatedMatrix = new Geom.Matirx();
+            this._matrix.setFromOffsetTransform(this._x, this._y, this._scaleX, this._scaleY, this._rotation, this._rotPointX, this._rotPointY);
+        },
+
+        x: {
+            get: function() {
+                return this._x;
+            },
+            set: function(value) {
+                this._x = value;
+                this._dirty = true;
+            }
+        },
+
+        y: {
+            get: function() {
+                return this._y;
+            },
+            set: function(value) {
+                this._y = value;
+                this._dirty = true;
+            }
+        },
+
+        scaleX: {
+            get: function() {
+                return this._scaleX;
+            },
+            set: function(value) {
+                this._scaleX = value;
+                this._dirty = true;
+            }
+        },
+
+        scaleY: {
+            get: function() {
+                return this._scaleY;
+            },
+            set: function(value) {
+                this._scaleY = value;
+                this._dirty = true;
+            }
+        },
+
+        rotation: {
+            get: function() {
+                return this._rotation;
+            },
+            set: function(value) {
+                this._rotation = value;
+                this._dirty = true;
+            }
+        },
+
+        rotPointX: {
+            get: function() {
+                return this._rotPointX;
+            },
+            set: function(value) {
+                this._rotPointX = value;
+                this._dirty = true;
+            }
+        },
+
+        rotPointY: {
+            get: function() {
+                return this._rotPointY;
+            },
+            set: function(value) {
+                this._rotPointY = value;
+                this._dirty = true;
+            }
+        },
+
+        anchorPointX: {
+            get: function() {
+                return this.rotPointX;
+            },
+            set: function(value) {
+                this.rotPointX = value;
+            }
+        },
+
+        anchorPointY: {
+            get: function() {
+                return this.rotPointY;
+            },
+            set: function(value) {
+                this.rotPointY = value;
+            }
+        },
+
+        matrix: {
+            get: function() {
+                return this._matrix;
+            }
+        },
+
+        worldX: {
+            get: function() {
+                return this.getConcatenateMatirx().tx - this._rotPointX;
+            }
+        },
+
+        worldY: {
+            get: function() {
+                return this.getConcatenateMatirx().ty - this._rotPointY;
+            }
+        },
+
+        parent: {
+            get: function() {
+                return this._parent;
+            },
+            set: function(value) {
+                if( !this.checkAncestor(value) ) {
+                    this._parent = value;
+                    this._dirty = true;
+                }
+            }
+        },
+
+        locked: {
+            get: function() {
+                return this._locked;
+            },
+            set: function(value) {
+                this._locked = value;
+                if( this._locked ) {
+                    this._matrix.setFromOffsetTransform(this.x, this.y, this.scaleX, this.scaleY, this.rotation, this.anchorPointX, this.anchorPointY);
+                }
+            }
+        },
+
+        ignoreParent: {
+            get: function() {
+                return this._ignoreParent;
+            },
+            set: function(value) {
+                this._ignoreParent = value;
+            }
+        },
+
+        ignoreChild: {
+            get: function() {
+                return this._ignoreParent;
+            },
+            set: function(value) {
+                this._ignoreChild = value;
+            }
+        },
+
+        scale: {
+            set: function(value) {
+                this._scaleX = value;
+                this._scaleY = value;
+                this._dirty = true;
+            }
+        },
+
+        setPosition: function(x, y) {
+            this._x = x;
+            this._y = y;
+            this._dirty = true;
+
+            return this;
+        },
+
+        setPositionFromPoint: function(point) {
+            return this.setPosition(point.x, point.y);
+        },
+
+        translatePositionFromPoint: function(point) {
+            this._x += point.x;
+            this._y += point.y;
+            this._dirty = true;
+
+            return this;
+        },
+
+        getPositionPoint: function(output) {
+            if( adun.isUndefined(output) ) {
+                output = new Geom.Point();
+
+                return output.setTo(this._x, this._y);
+            }
+        },
+
+        setTransform: function(x, y, scaleX, scaleY, rotation, rotPointX, rotPointY) {
+            if ( !adun.isNumber(x) ) { x = 0; }
+            if ( !adun.isNumber(y) ) { y = 0; }
+            if ( !adun.isNumber(scaleX) ) { scaleX = 1; }
+            if ( !adun.isNumber(scaleY) ) { scaleY = 1; }
+            if ( !adun.isNumber(rotation) ) { rotation = 0; }
+            if ( !adun.isNumber(rotPointX) ) { rotPointX = 0; }
+            if ( !adun.isNumber(rotPointY) ) { rotPointY = 0; }
+
+            this._x = x;
+            this._y = y;
+            this._scaleX = scaleX;
+            this._scaleY = scaleY;
+            this._rotation = rotation;
+            this._rotPointX = rotPointX;
+            this._rotPointY = rotPointY;
+            this._dirty = true;
+
+            return this;
+        },
+
+        getParentMatrix: function() {
+            if( this._parent ) {
+                return this._parent.getConcatenatedMatrix();
+            }
+
+            return null;
+        },
+
+        getConcatenatedMatrix: function() {
+            if( this._drity && !this.locked ) {
+                this._matrix.setFromOffsetTransform(this.x, this.y, this.scaleX, this.scaleY, this.rotation, this.anchorPointX, this.anchorPointY);
+            }
+
+            this._cachedConcatenatedMatrix.copyFrom(this._matrix);
+
+            if( this._parent && !this._parent.ignoreChild && !this.ignoreParent ) {
+                this._cachedConcatenatedMatrix.tx -= this._parent.anchorPointX;
+                this._cachedConcatenatedMatrix.ty -= this._parent.anchorPointY;
+                this._cachedConcatenatedMatrix.prependMatrix(this.getParentMatrix());
+            }
+
+            this._dirty = false;
+
+            return this._cachedConcatenatedMatrix;
+        },
+
+        transformPoint: function(point) {
+            var mat = this.getConcatenatedMatrix;
+
+            return mat.transformPoint(point);
+        },
+
+        copyFrom: function(source) {
+            this.setTransform(source.x, source.y, source.scaleX, source.scaleY, source.rotation, source.rotPointX, source.rotPointY);
+            this.praent = source.parent;
+            this._matrix = source.matrix.clone();
+
+            return this;
+        },
+
+        copyTo: function(destination) {
+            destination.copyFrom(this);
+
+            return this;
+        },
+
+        clone: function(output) {
+            if( adun.isUndefined(output) ) {
+                output = new Geom.Transform();
+            }
+            output.copyFrom(this);
+
+            return output;
+        },
+
+        checkAncestor: function(){
+            return false;
+        },
+
+        toString: function() {
+            return "[{Transform (x=" + this._x + " y=" + this._y + " scaleX=" + this._scaleX + " scaleY=" + this._scaleY + " rotation=" + this._rotation + " regX=" + this._rotPointX + " regY=" + this.rotPointY + " matrix=" + this._matrix + ")}]";
+        }
+    });
+
+    var Matrix = Geom.Matrix = adun.Class({
+        TYPE: 'Matirx',
+
+        init: function(a, b, c, d, tx, ty) {
+            a = adun.isNumber(a) ? a : 1;
+            b = adun.isNumber(b) ? b : 0;
+            c = adun.isNumber(c) ? c : 0;
+            d = adun.isNumber(d) ? d : 1;
+            tx = adun.isNumber(tx) ? tx : 0;
+            ty = adun.isNumber(ty) ? ty : 0;
+
+            this.a = a;
+            this.b = b;
+            this.c = c;
+            this.d = d;
+            this.tx = tx;
+            this.ty = ty;
+        }
+    });
+
 
 })();
 
