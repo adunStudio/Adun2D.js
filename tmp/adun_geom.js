@@ -1032,7 +1032,9 @@
             this._ignoreParent = false;
             this._ignoreChild = false;
             this._dirty = true;
+
             this.setTransform(x, y, scaleX, scaleY, rotation, rotPointX, rotPointY);
+
             this._matrix = new Geom.Matirx();
             this._cachedConcatenatedMatrix = new Geom.Matirx();
             this._matrix.setFromOffsetTransform(this._x, this._y, this._scaleX, this._scaleY, this._rotation, this._rotPointX, this._rotPointY);
@@ -1318,13 +1320,254 @@
             tx = adun.isNumber(tx) ? tx : 0;
             ty = adun.isNumber(ty) ? ty : 0;
 
+            this.a = 1;
+            this.b = 0;
+            this.c = 0;
+            this.d = 1;
+            this.tx = 0;
+            this.ty = 0;
+        },
+
+        setTo: function(a, b, c, d, tx, ty) {
+            a = adun.isNumber(a) ? a : 1;
+            b = adun.isNumber(b) ? b : 0;
+            c = adun.isNumber(c) ? c : 0;
+            d = adun.isNumber(d) ? d : 1;
+            tx = adun.isNumber(tx) ? tx : 0;
+            ty = adun.isNumber(ty) ? ty : 0;
+
             this.a = a;
             this.b = b;
             this.c = c;
             this.d = d;
             this.tx = tx;
             this.ty = ty;
+
+            return this;
+        },
+
+        identity: function() {
+            this.a = 1;
+            this.b = 0;
+            this.c = 0;
+            this.d = 1;
+            this.tx = 0;
+            this.ty = 0;
+
+            return this;
+        },
+
+        setFromTransform: function(tx, ty, scaleX, scaleY, rotation) {
+            this.identity();
+
+            var cos = Math.cos(rotation);
+            var sin = Math.sin(rotation);
+
+            this.append(cos * scaleX, sin * scaleX, -sin * scaleX, cos * scaleY, tx, ty);
+
+            return this;
+        },
+
+        setFromOffsetTransform: function(tx, ty, scaleX, scaleY, rotation, rotPointX, rotPointY) {
+            this.identity();
+
+            var cos = Math.cos(rotation);
+            var sin = Math.sin(rotation);
+
+            this.append(cos * scaleX, sin * scaleX, -sin * scaleX, cos * scaleY, tx + rotPointX, ty + rotPointY);
+
+            return this;
+        },
+
+        prepend: function(a, b, c, d, tx, ty) {
+            a = adun.isNumber(a) ? a : 1;
+            b = adun.isNumber(b) ? b : 0;
+            c = adun.isNumber(c) ? c : 0;
+            d = adun.isNumber(d) ? d : 1;
+            tx = adun.isNumber(tx) ? tx : 0;
+            ty = adun.isNumber(ty) ? ty : 0;
+
+            var tx1 = this.tx;
+            var a1 = this.a;
+            var c1 = this.c;
+
+            this.a = a1 * a + this.b * c;
+            this.b = a1 * b + this.b * d;
+            this.c = c1 * a + this.d * c;
+            this.d = c1 * b + this.d * d;
+            this.tx = tx1 * a + this.ty * c + tx;
+            this.ty = tx1 * b + this.ty * d + ty;
+
+            return this;
+        },
+
+        prependMatrix: function(m) {
+            var tx1 = this.tx;
+            var a1 = this.a;
+            var c1 = this.c;
+
+            this.a = a1 * m.a + this.b * m.c;
+            this.b = a1 * m.b + this.b * m.d;
+            this.c = c1 * m.a + this.d * m.c;
+            this.d = c1 * m.b + this.d * m.d;
+            this.tx = tx1 * m.a + this.ty * m.c + m.tx;
+            this.ty = tx1 * m.b + this.ty * m.d + m.ty;
+
+            return this;
+        },
+
+        append: function(a, b, c, d, tx, ty) {
+            a = adun.isNumber(a) ? a : 1;
+            b = adun.isNumber(b) ? b : 0;
+            c = adun.isNumber(c) ? c : 0;
+            d = adun.isNumber(d) ? d : 1;
+            tx = adun.isNumber(tx) ? tx : 0;
+            ty = adun.isNumber(ty) ? ty : 0;
+
+            var a1 = this.a;
+            var b1 = this.b;
+            var c1 = this.c;
+            var d1 = this.d;
+
+            this.a = a * a1 + b * c1;
+            this.b = a * b1 + b * d1;
+            this.c = c * a1 + d * c1;
+            this.d = c * b1 + d * d1;
+            this.tx = tx * a1 + ty * c1 + this.tx;
+            this.ty = tx * b1 + ty * d1 + this.ty;
+
+            return this;
+        },
+
+        appendMatrix: function(m) {
+            var a1 = this.a;
+            var b1 = this.b;
+            var c1 = this.c;
+            var d1 = this.d;
+
+            this.a = m.a * a1 + m.b * c1;
+            this.b = m.a * b1 + m.b * d1;
+            this.c = m.c * a1 + m.d * c1;
+            this.d = m.c * b1 + m.d * d1;
+            this.tx = m.tx * a1 + m.ty * c1 + this.tx;
+            this.ty = m.tx * b1 + m.ty * d1 + this.ty;
+
+            return this;
+        },
+
+        setPosition: function(x, y) {
+            this.tx = x;
+            this.ty = y;
+
+            return this;
+        },
+
+        setPositionPoint: function(point) {
+            this.tx = point.x;
+            this.ty = point.y;
+
+            return this;
+        },
+
+        getPosition: function(output) {
+            if( adun.isUndefined(output) ) {
+                output = new Geom.Point();
+            }
+
+            return output.setTo(this.tx, this.ty);
+        },
+
+        rotate: function(radians) {
+            var cos = Math.cos(radians);
+            var sin = Math.sin(radians);
+
+            var a1 = this.a;
+            var c1 = this.c;
+            var tx1 = this.tx;
+
+            this.a = a1 * cos - this.b * sin;
+            this.b = a1 * sin + this.b * cos;
+            this.c = c1 * cos - this.d * sin;
+            this.d = c1 * sin + this.d * cos;
+            this.tx = tx1 * cos - this.ty * sin;
+            this.ty = tx1 * sin + this.ty * cos;
+
+            return this;
+        },
+
+        translate: function(tx, ty) {
+            this.tx += tx;
+            this.ty += ty;
+
+            return this;
+        },
+
+        scale: function(scaleX, scaleY) {
+            this.a *= scaleX;
+            this.d *= scaleY;
+
+            return this;
+        },
+
+        transformPoint: function(point) {
+            var x = point.x;
+            var y = point.y;
+
+            point.x = this.a * x + this.c * y + this.tx;
+            point.y = this.b * x + this.d * y + this.ty;
+
+            return point;
+        },
+
+        invert: function() {
+            var a1 = this.a;
+            var b1 = this.b;
+            var c1 = this.c;
+            var d1 = this.d;
+            var tx1 = this.tx;
+
+            var n = a1 * d1 - b1 * c1;
+
+            this.a = d1 / n;
+            this.b = -b1 / n;
+            this.c = -c1 / n;
+            this.d = a1 / n;
+            this.tx = (c1 * this.ty - d1 * tx1) / n;
+            this.ty = -(a1 * this.ty - b1 * tx1) / n;
+
+            return this;
+        },
+
+        copyFrom: function(m) {
+            this.a = m.a;
+            this.b = m.b;
+            this.c = m.c;
+            this.d = m.d;
+            this.tx = m.tx;
+            this.ty = m.ty;
+
+            return this;
+        },
+
+        copyTo: function(m) {
+            m.a = this.a;
+            m.b = this.b;
+            m.c = this.c;
+            m.d = this.d;
+            m.tx = this.tx;
+            m.ty = this.ty;
+
+            return this;
+        },
+
+        clone: function() {
+            return new Geom.Matrix(this.a, this.b, this.c, this.d, this.tx, this.ty);
+        },
+
+        toString: function() {
+            return "[{Matrix (a=" + this.a + " b=" + this.b + " c=" + this.c + " d=" + this.d + " tx=" + this.tx + " ty=" + this.ty + ")}]";
         }
+
     });
 
 

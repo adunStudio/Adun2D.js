@@ -5,15 +5,28 @@
     <title></title>
 </head>
 <body>
-
+    <canvas id="myCanvas" width="320" height="320"></canvas>
 </body>
 </html>
-<script src="./tmp.js"></script>
+<script src="./adun.js"></script>
+<script src="./k_tmp/geom.js"></script>
 <script>
 
-    var a = new adun.Geom.AABB();
-    console.log(a.width);
-    a.width = 2;
-    console.log(a.width);
+    var canvas = document.getElementById('myCanvas');
+    var ctx = canvas.getContext('2d');
+
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'green';
+
+
+    var a = new adun.Geom.Line(0, 0, 100, 100);
+    var b = new adun.Geom.Line(0, 0, 100, 20);
+
+  //  a.draw(ctx);
+  //  b.draw(ctx);
+
+    alert(a.isPointOnLineSegment(100, 100));
+
+
 
 </script>
