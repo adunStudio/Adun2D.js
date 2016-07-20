@@ -881,7 +881,15 @@
             output.setTo(x, y, pt.x, pt.y);
 
             return output;
-        }
+        },
+
+        draw: function(ctx) {
+            ctx.beginPath();
+            ctx.moveTo(this.x1, this.y1);
+            ctx.lineTo(this.x2, this.y2);
+            ctx.stroke();
+            return this;
+        },
     });
 })();
 
@@ -946,10 +954,488 @@
             }
 
             return false;
-        },
+        }
     });
 })();
 
+// #Rectangle
+/**
+ * Rectangle
+ * 사각형
+ * Rectangle 객체는 top-left 위치(x, y)와 넓이, 높이를 가진다.
+ *
+ * @Class Rectangle
+ * @namespace Adun.Geom
+ * @constructor
+ * @param [x=0] {Number} top-left의 x 좌표
+ * @param [y=0] {Number} top-left의 y 좌표
+ * @param [width=0]{Number} 사각형의 넓이
+ * @param [height=0]{Number} 사각형의 높이
+ * @return {adun.Geom.Rectangle} Rectangle object
+ */
+(function() {
+    'use strict';
+
+    var Rectangle = adun.Geom.Rectangle = adun.Class({
+        TYPE: 'Rectangle',
+
+        init: function(x, y, width, height) {
+
+            /**
+             * top-left의 x 좌표
+             *
+             * @property x
+             * @type {Number}
+             * @default 0
+             * @public
+             */
+            this.x = 0;
+
+            /**
+             * top-left의 y 좌표
+             *
+             * @property y
+             * @type {Number}
+             * @default 0
+             * @public
+             */
+            this.y = 0;
+
+            /**
+             * 사각형의 넓이
+             *
+             * @property width
+             * @type {Number}
+             * @default 0
+             * @public
+             */
+            this.width = 0;
+
+            /**
+             * 사각형의 높이
+             *
+             * @property height
+             * @type {Number}
+             * @default 0
+             * @public
+             */
+            this.height = 0;
+
+            this.setTo(x, y, width, height);
+        },
+
+        bottom: {
+            get: function() {
+                return this.y + this.height;
+            },
+            /**
+             * bottom
+             * 사각형의 y좌표 값과 넓이의 '합' 이다.
+             * bottom 프로퍼티값을 바꾸는것은 사각형 객체의 높이를 바꾸며, 사각형 객체의 x,y 좌표값에는 아무런 영향을 끼치지 않는다.
+             *
+             * @property bottom
+             * @type {Number}
+             * @public
+             */
+            set: function(height) {
+                if( value ) {
+                    if( value < this.y) {
+                        this.height = 0
+                    } else {
+                        this.height = value;
+                    }
+                }
+            }
+        },
+
+        bottomRight: {
+            get: function() {
+                var output = new adun.Geom.Point();
+                return output.setTo(this.right, this.bottom);
+            },
+            /**
+             * bottomRight
+             * 사각형의 bottom-right 좌표
+             * 매개변수의 x, y값에 의해 설정된다.
+             *
+             * @property bottomRIght
+             * @type {adun.Geom.Point}
+             * @public
+             */
+            set: function(value) {
+                if( value ) {
+                    this.right = value.x;
+                    this.bottom = value.y;
+                }
+            }
+
+        },
+
+        center: {
+            /**
+             * center
+             * 사각형의 중심 좌표값이다.
+             *
+             * @property center
+             * @type {adun.Geom.Point}
+             * @readOnly
+             * @public
+             */
+            get: function() {
+                var output = new adun.Geom.Point();
+                return ouput.setTo(Math.round(this.width / 2), Math.round(this.height / 2));
+            }
+        }
+
+    })
+})();
+
+// #Intersect
+/**
+ * Intersect
+ * 교차하다: 충돌
+ * 기하학 객체사이의 교차(충돌)를 판정하는 스태틱 메서드 컬레션들을 포함한다.
+ *
+ * @Class Intersect
+ * @namespace adun.Geom
+ * @static
+ */
+(function() {
+    'use strict';
+
+    var Intersect = adun.Class({
+        'TYPE': 'Intersect',
+
+
+        /**
+         * -------------------------------------------------------------------------------------------------------------
+         * Distance (길이)
+         * -------------------------------------------------------------------------------------------------------------
+         */
+
+        /**
+         * 지정한 두 좌표 사이 거리를 반환한다.
+         *
+         * @method distance
+         * @param x1 첫번째 좌표의 x 위치
+         * @param y1 첫번째 좌표의 y 위치
+         * @param x2 두번째 좌표의 x 위치
+         * @param y2 두번째 좌표의 y 위치
+         * @return {number}
+         * @public
+         * @static
+         */
+        distance: function(x1, y1, x2, y2) {
+            return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+        },
+
+        /**
+         * 지정한 두 좌표 사이 거리의 제곱을 반환한다.
+         *
+         * @method distance
+         * @param x1 첫번째 좌표의 x 위치
+         * @param y1 첫번째 좌표의 y 위치
+         * @param x2 두번째 좌표의 x 위치
+         * @param y2 두번째 좌표의 y 위치
+         * @return {number}
+         * @public
+         * @static
+         */
+        distanceSquared: function(x1, y1, x2, y2) {
+            return (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
+        },
+
+
+        /**
+         * -------------------------------------------------------------------------------------------------------------
+         * Lines (선)
+         * -------------------------------------------------------------------------------------------------------------
+         */
+
+        /**
+         * 어떠한 두 직선이 한 지점에서 교차(충돌)했는지 검사한다.
+         * 두선 모두 무한히 뻗어나가는 선이라 가정한다.
+         *
+         * @method lineToLine
+         * @param line1 {adun.Geom.Line} 첫번째 직선
+         * @param line2 {adun.Geom.Line] 두번째 직선
+         * @param [output] {adun.Geom.IntersectResult} 교차점에 대한 정보를 저장한다. [옵션]
+         * @return {adun.Geom.IntersectResult}
+         * @public
+         * @static
+         */
+        lineToLine: function(line1, line2, output) {
+            if( adun.isUndefined(output) ) { output = new adun.Geom.IntersectResult(); }
+
+            output.result = false;
+
+            /*
+             http://blog.naver.com/PostView.nhn?blogId=tobsysco&logNo=90189606643&beginTime=0&jumpingVid=&from=search&redirect=Log&widgetTypeCall=true
+             */
+
+            // 직선 A는 서로 다른 두 점 (line1.x1, line1.y1)(line1.x2, line1.y2)을 지나고, 직선 B는 서로 다른 두 점(line2.x1, line2.y1)(line2.x2, line2.y2)를 지날 때,
+            // (line1.y2 - line1.y1) / (line1.x2 - line1.x1) === (line2.y2 - line2.y1) / (line2.x2 - line2.x1) 이면 '기울기'가 같으므로 '평행' 또는 '일치'이다.
+            // 위는 (line2.x2 - line2.x1) * (line1.y2 - line1.y1) === (line1.x2 - line1.x1) *(line2.y2 - line2.y1) 로 표현할 수 있다.
+            // => (line2.x2 - line2.x1) * (line1.y2 - line1.y1) - (line1.x2 - line1.x1) *(line2.y2 - line2.y1) == 0
+            // => denominator(분모) = (line2.x2 - line2.x1) * (line1.y2 - line1.y1) - (line1.x2 - line1.x1) *(line2.y2 - line2.y1)
+
+            // => 다음 사이트의 공식으로 교차점을 구할 수 있다. http://zetawiki.com/wiki/%EB%91%90_%EC%A7%81%EC%84%A0%EC%9D%98_%EA%B5%90%EC%B0%A8%EC%A0%90#cite_note-same_m-1
+
+            //
+            // 분모
+            var denom = (line1.x1 - line1.x2) * (line2.y1 - line2.y2) - (line1.y1 - line1.y2) * (line2.x1 - line2.x2);
+
+            // den == 0 일 경우 평행선이므로 교차하지 않는다.
+            if( denom !== 0 ) {
+                output.result = true;
+                output.x = ((line1.x1 * line1.y2 - line1.y1 * line1.x2) * (line2.x1 - line2.x2) - (line1.x1 - line1.x2) * (line2.x1 * line2.y2 - line2.y1 * line2.x2)) / denom;
+                output.y = ((line1.x1 * line1.y2 - line1.y1 * line1.x2) * (line2.y1 - line2.y2) - (line1.y1 - line1.y2) * (line2.x1 * line2.y2 - line2.y1 * line2.x2)) / denom;
+            }
+
+            return output;
+        },
+
+        /**
+         * 직선과 선분이 한 지점에서 교차(충돌)했는지 검사한다.
+         *
+         * @method lineToSegment
+         * @param line1 {adun.Geom.Line} 첫번째 선(직선)
+         * @param seg {adun.Geom.Line] 두번째 선(선분)
+         * @param [output] {adun.Geom.IntersectResult} 교차점에 대한 정보를 저장한다. [옵션]
+         * @return {adun.Geom.IntersectResult}
+         * @public
+         * @static
+         */
+        lineToSegment: function(line1, seg, output) {
+            if( adun.isUndefined(output) ) { output = new adun.Geom.IntersectResult(); }
+
+            output.result = false;
+
+            var denom = (line1.x1 - line1.x2) * (seg.y1 - seg.y2) - (line1.y1 - line1.y2) * (seg.x1 - seg.x2);
+
+            if( denom !== 0 ) {
+                output.x = ((line1.x1 * line1.y2 - line1.y1 * line1.x2) * (seg.x1 - seg.x2) - (line1.x1 - line1.x2) * (seg.x1 * seg.y2 - seg.y1 * seg.x2)) / denom;
+                output.y = ((line1.x1 * line1.y2 - line1.y1 * line1.x2) * (seg.y1 - seg.y2) - (line1.y1 - line1.y2) * (seg.x1 * seg.y2 - seg.y1 * seg.x2)) / denom;
+
+                var maxX = Math.max(seg.x1, seg.x2);
+                var minX = Math.min(seg.x1, seg.x2);
+                var maxY = Math.max(seg.y1, seg.y2);
+                var minY = Math.min(seg.y1, seg.y2);
+
+                if( output.x <= maxX && output.x >= minX && output.y <= maxY && output.y >= minY ) {
+                    output.result = true;
+                }
+            }
+
+            return output;
+        },
+
+        /**
+         * 직선과 지정한 좌표의 선분이 한 지점에서 교차(충돌)했는지 검사한다.
+         *
+         * @method lineToRawSegment
+         * @param line {adun.Geom.Line} 첫번째 선(직선)
+         * @param x1 {adun.Geom.Line] 선분의 시작 x좌표
+         * @param y1 {adun.Geom.Line] 선분의 시작 y좌표
+         * @param x2 {adun.Geom.Line] 선분의 끝 x좌표
+         * @param y2 {adun.Geom.Line] 선분의 끝 y좌표
+         * @param [output] {adun.Geom.IntersectResult} 교차점에 대한 정보를 저장한다. [옵션]
+         * @return {adun.Geom.IntersectResult}
+         * @public
+         * @static
+         */
+        lineToRawSegment: function(line1, x1, y1, x2, y2, output) {
+            if( adun.isUndefined(output) ) { output = new adun.Geom.IntersectResult(); }
+
+            output.result = false;
+
+            var denom = (line1.x1 - line1.x2) * (y1 - y2) - (line1.y1 - line1.y2) * (x1 - x2);
+
+            if( denom !== 0 ) {
+                output.x = ((line1.x1 * line1.y2 - line1.y1 * line1.x2) * (x1 - x2) - (line1.x1 - line1.x2) * (x1 * y2 - y1 * x2)) / denom;
+                output.y = ((line1.x1 * line1.y2 - line1.y1 * line1.x2) * (y1 - y2) - (line1.y1 - line1.y2) * (x1 * y2 - y1 * x2)) / denom;
+
+                var maxX = Math.max(x1, x2);
+                var minX = Math.min(x1, x2);
+                var maxY = Math.max(y1, y2);
+                var minY = Math.min(y1, y2);
+
+                if( output.x <= maxX && output.x >= minX && output.y <= maxY && output.y >= minY ) {
+                    output.result = true;
+                }
+            }
+
+            return output;
+        },
+
+        /**
+         * 선분과 지정한 좌표의 선분이 한 지점에서 교차(충돌)했는지 검사한다.
+         *
+         * @method lineSegmentToRawSegment
+         * @param line {adun.Geom.Line} 첫번째 선(선분)
+         * @param x1 {adun.Geom.Line] 선분의 시작 x좌표
+         * @param y1 {adun.Geom.Line] 선분의 시작 y좌표
+         * @param x2 {adun.Geom.Line] 선분의 끝 x좌표
+         * @param y2 {adun.Geom.Line] 선분의 끝 y좌표
+         * @param [output] {adun.Geom.IntersectResult} 교차점에 대한 정보를 저장한다. [옵션]
+         * @return {adun.Geom.IntersectResult}
+         * @public
+         * @static
+         */
+        lineSegmentToRawSegment: function(line, x1, y1, x2, y2, output) {
+            if( adun.isUndefined(output) ) { output = new adun.Geom.IntersectResult(); }
+
+            output = adun.Geom.Intersect.lineToRawSegment(line, x1, y1, x2, y2, output);
+
+            var maxX = Math.max(line.x1, line.x2);
+            var minX = Math.min(line.x1, line.x2);
+            var maxY = Math.max(line.y1, line.y2);
+            var minY = Math.min(line.y1, line.y2);
+
+            if( output.x <= maxX && output.x >= minX && output.y <= maxY && output.y >= minY ) {
+                output.result = true;
+                return output;
+            }
+
+            ouput.result = false;
+            return output;
+        },
+
+        /**
+         * 직선과 광선이 한 지점에서 교차(충돌)했는지 검사한다.
+         *
+         * @method lineSegmentToRawSegment
+         * @param line {adun.Geom.Line} 직선
+         * @param ray {adun.Geom.Ray] 광선
+         * @param [output] {adun.Geom.IntersectResult} 교차점에 대한 정보를 저장한다. [옵션]
+         * @return {adun.Geom.IntersectResult}
+         * @public
+         * @static
+         */
+        lineToRay: function(line1, ray, output) {
+            if( adun.isUndefined(output) ) { output = new adun.Geom.IntersectResult(); }
+
+            output.result = false;
+
+            var denom = (line1.x1 - line1.x2) * (ray.y1 - ray.y2) - (line1.y1 - line1.y2) * (ray.x1 - ray.x2);
+
+            if (denom !== 0) {
+                output.x = ((line1.x1 * line1.y2 - line1.y1 * line1.x2) * (ray.x1 - ray.x2) - (line1.x1 - line1.x2) * (ray.x1 * ray.y2 - ray.y1 * ray.x2)) / denom;
+                output.y = ((line1.x1 * line1.y2 - line1.y1 * line1.x2) * (ray.y1 - ray.y2) - (line1.y1 - line1.y2) * (ray.x1 * ray.y2 - ray.y1 * ray.x2)) / denom;
+                output.result = true; // true unless either of the 2 following conditions are met
+
+                if (!(ray.x1 >= ray.x2) && output.x < ray.x1) {
+                    // 교차지점 x가 광선의 시작 x보다 작다면
+                    output.result = false;
+                }
+                if (!(ray.y1 >= ray.y2) && output.y < ray.y1) {
+                    // 교차지점 x가 광선의 시작 y보다 작다면
+                    output.result = false;
+                }
+            }
+            return output;
+        },
+
+        /**
+         * 직선과 원이 교차(충돌)했는지 검사한다.
+         *
+         * @method lineToCircle
+         * @param line {adun.Geom.Line} 직선
+         * @param circle {adun.Geom.Circle] 원
+         * @param [output] {adun.Geom.IntersectResult} 교차점에 대한 정보를 저장한다. [옵션]
+         * @return {adun.Geom.IntersectResult}
+         * @public
+         * @static
+         */
+        lineToCircle: function(line, circle, output) {
+            if( adun.isUndefined(output) ) { output = new adun.Geom.IntersectResult(); }
+
+            output.result = false;
+
+            if( line.perp(circle.x, circle.y).length <= circle.radius ) {
+                output.result = true;
+            }
+
+            return output;
+        },
+
+        /**
+         * 직선과 사각형이 교차(충돌)했는지 검사한다.
+         *
+         * @method lineToRctangle
+         * @param line {adun.Geom.Line} 직선
+         * @param rectangle {adun.Geom.Rectangle] 사각형
+         * @param [output] {adun.Geom.IntersectResult} 교차점에 대한 정보를 저장한다. [옵션]
+         * @return {adun.Geom.IntersectResult}
+         * @public
+         * @static
+         */
+        lineToRectangle: function(line, rect, output) {
+            if( adun.isUndefined(output) ) { output = new adun.Geom.IntersectResult(); }
+
+            output.result = false;
+
+            adun.Geom.Intersect.lineToRawSegment(line, rect.x, rect.y, rect.right, rect.y, output);
+
+            if( output.result == true ) {
+                return output;
+            }
+
+
+        }
+    });
+
+    adun.Geom.Intersect = new Intersect();
+})();
+
+// #IntersectResult
+/**
+ * IntersectResult
+ * 교차점(충돌 결과)를 저장할 간단한 클래스다.
+ * Intersect 클래스의 STATIC 메서드와 함께 사용된다.
+ *
+ *
+ * @Class IntersectResult
+ * @namespace Adun.Geom
+ * @constructor
+ *
+ */
+(function() {
+    'use strict';
+
+    var IntersectResult = adun.Geom.IntersectResult = adun.Class({
+        TYPE: 'IntersectResult',
+
+        init: function() {
+            this.result = false;
+        },
+
+        /**
+         * 매개변수에 근거하여 좌표를 설정한다.
+         *
+         * @method setTo
+         * @param [x1=0]
+         * @param [y1=0]
+         * @param [x2=0]
+         * @param [y2=0]
+         * @param [width=0]
+         * @param [height=0]
+         * @public
+         */
+        setTo: function(x1, y1, x2, y2, width, height) {
+
+            this.x1 = x1 || 0;
+            this.y1 = y1 || 0;
+            this.x2 = x2 || 0;
+            this.y2 = y2 || 0;
+            this.width = width || 0;
+            this.height = height || 0;
+        }
+
+    });
+
+
+})();
 
 
 

@@ -15,17 +15,17 @@
     var canvas = document.getElementById('myCanvas');
     var ctx = canvas.getContext('2d');
 
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 1;
     ctx.strokeStyle = 'green';
 
 
     var a = new adun.Geom.Line(0, 0, 100, 100);
-    var b = new adun.Geom.Line(0, 0, 100, 20);
+    var b = a.perp(70, 100);
 
-  //  a.draw(ctx);
-  //  b.draw(ctx);
+    a.draw(ctx);
+    b.draw(ctx);
+    console.dir(b);
 
-    alert(a.isPointOnLineSegment(100, 100));
 
 
 
