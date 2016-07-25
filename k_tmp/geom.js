@@ -1217,7 +1217,86 @@
                     }
                 }
             }
+        },
+
+        topLeft: {
+            get: function() {
+                var output = new adun.Geom.Point();
+                return ouput.setTo(this.x, this.y);
+            },
+            /**
+             * top
+             * 사각형의 top-left의 x,y 좌표
+             *
+             * @property topLeft
+             * @type {adun.Geom.Point}
+             * @public
+             */
+            set: function(value) {
+                if( value ) {
+                    this.x = value.x;
+                    this.y = value.y;
+                }
+            }
+        },
+
+        /**
+         * Rectangle 객체의 좌표를 설정한다.
+         *
+         * @method setTo
+         * @param [x=0] {Number} top-left의 x 좌표
+         * @param [y=0] {Number} top-left의 y 좌표
+         * @param [width=0]{Number} 사각형의 넓이
+         * @param [height=0]{Number} 사각형의 높이
+         * @return {adun.Geom.Rectangle}
+         * @public
+         */
+        setTo: function(x, y, width, height) {
+            if( !isNaN(x) && !isNaN(y) && !isNaN(width) && !isNaN(height) ) {
+                this.x = x;
+                this.y = y;
+                if( width >= 0 ) {
+                    this.width = width;
+                }
+                if( height >= 0 ) {
+                    this.height = height;
+                }
+            }
+
+            return this;
+        },
+
+        /**
+         * 같은 프로퍼티 x, y, width, height 값을 가진 새로운 Rectangle 객체를 반환한다.
+         *
+         * @method clone
+         * @param [output=adun.Geom.Rectangle] {adun.Geom.Rectangle}
+         * @return {adun.Geom.Rectangle}
+         * @public
+         */
+        clone: function(output) {
+            if( adun.isUndefined(output) ) { output = new adun.Geom.Rectangle(); }
+
+            return output.setTo(this.x, this.y, this._daimater);
+        },
+
+        /**
+         * 지정한 좌표가 이 Rectangle 객체의 내에 포함되어 있는지 여부를 확인한다.
+         *
+         * @method contains
+         * @param x {Number} 검사할 x좌표
+         * @param y {Number} 검사할 y좌표
+         * @reutn {Boolean{
+         * @public
+         */
+        contains: function(x, y) {
+            return x >= this.x && x <= this.right && y >= this.y && y<= this.bottom;
+        },
+
+        containsPoint: function(point) {
+            return this.contains(point.x, point.y);
         }
+
 
     });
 })();
