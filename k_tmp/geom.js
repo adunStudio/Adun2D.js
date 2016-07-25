@@ -1085,9 +1085,141 @@
                 var output = new adun.Geom.Point();
                 return ouput.setTo(Math.round(this.width / 2), Math.round(this.height / 2));
             }
+        },
+
+        left: {
+            get: function() {
+                return this.x;
+            },
+            /**
+             * left
+             * 사각형의 top-left의 x 좌표
+             * left값을 바꾸는 것은 y와 높이의 값는 영향을 끼치지 않으며,
+             * 넓이에는 영향을 준다
+             * 그러나 x좌표 값을 바꾸는 넓이에 영향을 끼치지 않는다.
+             *
+             * @property left
+             * @type {Number}
+             * @public
+             */
+            set: function(value) {
+                if( value ) {
+                    var diff = this.x - value;
+                    if( this.width + diff < 0 ) {
+                        this.width = 0;
+                        this.x = value;
+                    } else {
+                        this.width += diff;
+                        this.x = value;
+                    }
+                }
+            }
+        },
+
+        right: {
+            get: function() {
+                return this.x + this.width;
+            },
+            /**
+             * right
+             * x좌표값와 넓이의 '합'
+             * right값을 바꾸는 것은 x,y와 높이의 값는 영향을 끼치지 않으며,
+             * 넓이에는 영향을 준다
+             * 그러나 x좌표 값을 바꾸는 넓이에 영향을 끼치지 않는다.
+             *
+             * @property right
+             * @type {Number}
+             * @public
+             */
+            set: function(value) {
+                if( value ) {
+                    if( value < this.x ) {
+                        this.width = 0;
+                    } else {
+                        this.width = value - this.x;
+                    }
+                }
+            }
+        },
+
+        size: {
+            /**
+             * size
+             * 사각형 객체의 사이즈다
+             * 넓이와 높이를 가진 포인트 객체가 반환된다.
+             *
+             * @property size
+             * @type {adun.Geom.Point}
+             * @public
+             */
+            get: function() {
+                var output = new adun.Geom.Point();
+                return output.setTo(this.width, this.height);
+            }
+        },
+
+        volume: {
+            /**
+             * volume
+             * 사각형 객체의 부피
+             * width * height
+             *
+             * @property volume
+             * @type {Number}
+             * @readOnly
+             * @public
+             */
+            get: function() {
+                return this.width * this.height;
+            }
+        },
+
+        perimeter: {
+            /**
+             * perimeter
+             * 사각형의 둘레
+             * 4변 길이의 합
+             *
+             * @property volume
+             * @type {Number}
+             * @readOnly
+             * @public
+             */
+            get: function() {
+                return (this.width * 2) + (this.height * 2);
+            }
+        },
+
+        top: {
+            get: function() {
+                return this.y;
+            },
+            /**
+             * top
+             * 사각형의 top-left의 y 좌표
+             * top값을 바꾸는 것은 x와 넓이의 값는 영향을 끼치지 않으며,
+             * 높이에는 영향을 준다
+             * 그러나 y좌표 값을 바꾸는 것은 높이에 영향을 끼치지 않는다.
+             *
+             * @property top
+             * @type {Number}
+             * @public
+             */
+            set: function(value) {
+                if( value ) {
+                    var diff = this.y - value;
+                    if( this.height + diff < 0 ) {
+                        this.height = 0;
+                        this.y = value;
+                    } else {
+                        this.height += diff;
+                        this.y = value;
+                    }
+                }
+            }
         }
 
-    })
+    });
 })();
 
 // #Intersect
