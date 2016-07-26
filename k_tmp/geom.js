@@ -1281,26 +1281,682 @@
         },
 
         /**
+         * 이 Rectangle 객체의 프로퍼티 값을 파라미터로 받은 Rectangle 객체로부터 복사한다.
+         *
+         * @mthod copyFrom
+         * @param source
+         * @returns {*|adun.Geom.Rectangle}
+         * @public
+         */
+        copyFrom: function(source) {
+            return this.setTo(source,x, source.y, source.width, source.height);
+        },
+
+        /**
+         * 이 Rectangle 객체의 프로퍼티 값을 파라미터로 받은 Rectangle 객체에 복사하여 파라미터로 받은 Rectangle 객체를 반환한다.
+         *
+         * @method copyTo
+         * @param target {adun.Geom.Rectangle} this 객체를 복사하여 반환할 객체
+         * @return {adun.Geom.Circle}
+         * @public
+         */
+        copyTo: function(target) {
+            if( adun.isUndefined(target) ) { target = new adun.Geom.Rectangle(); }
+            return target.copyFrom(this);
+        },
+
+        /**
          * 지정한 좌표가 이 Rectangle 객체의 내에 포함되어 있는지 여부를 확인한다.
          *
          * @method contains
          * @param x {Number} 검사할 x좌표
          * @param y {Number} 검사할 y좌표
-         * @reutn {Boolean{
+         * @reutn {Boolean}
          * @public
          */
         contains: function(x, y) {
             return x >= this.x && x <= this.right && y >= this.y && y<= this.bottom;
         },
 
+        /**
+         * 지정한 포인트가 이 Rectangle 객체의 내에 포함되어 있는지 여부를 확인한다.
+         *
+         * @method containsPoint
+         * @param {adun.Geom.Point} 검사할 x좌표
+         * @reutn {Boolean}
+         * @public
+         */
         containsPoint: function(point) {
             return this.contains(point.x, point.y);
+        },
+
+        /**
+         * 지정한 한 Rectangle 객체가 이 Rectangle 객체의 내에 포함되어 잇는지 여부를 확인한다.
+         *
+         * @method containsRect
+         * @param rect {adun.Geom.Rectangle}
+         * @returns {boolean}
+         * @publice
+         */
+        containsRect: function(rect) {
+            if( rect.volume > this.volume ) {
+                return false;
+            }
+
+            return rect.x >= this.x && rect.y >= this.y && rect.right <= this.right && rect.bottom <= this.bottom;
+        },
+
+        /**
+         * 두 Rectanlge 객체의 프로퍼티 값이 같은지 비교한다.
+         *
+         * @method equals
+         * @param toCompare {adun.Geom.Rectangle}
+         * @returns {boolean}
+         * @public
+         */
+        equals: function(toCompare) {
+            return this.x == toCompare.x && this.y == toCompare.y && this.width == toCompare.width && this.height == toCompare.height;
+        },
+
+        /**
+         * infalte(=부풀리다)
+         * Rectangle 객체의 크기를 지정된 크기만큼 증감시킨다.
+         *
+         * Rectangle 객체의 center point는 변함없다.
+         * dx값에 의해 left와 right 크기가 증감한다.
+         * dy값에 의해 top과 bottom 크기가 증감한다.
+         *
+         * @method inflate
+         * @param dx {Number}
+         * @param dy {Number}
+         * @return {adun.Geom.Rectangle}
+         * @public
+         */
+        inflate: function(dx, dy) {
+            if( !isNaN(dx) && !isNaN(dy) ) {
+                this.x -= dx;
+                this.width += 2 * dx;
+                this.y -= dy;
+                this.height += 2 * dy;
+            }
+
+            return this;
+        },
+
+        /**
+         * inflte() 메서드에서 파라미터로 Point를 받는다.
+         *
+         * @method inflatePoint
+         * @param point {adun.Geom.Point}
+         * @return {adun.Geom.Rectangle}
+         * @public
+         */
+        inflatePoint: function(point) {
+            return this.inflate(point.x, point.y);
+        },
+
+        /**
+         * 매개변수로 받은 toIntersect가이 Rectangle 객체와 교차(충돌)하는지 검사한다.
+         * 이 메서드는 지정된 Rectangle 객체와 이 Rectangle 객체와 교차하는지 x, y, 너비, 높이 프로퍼티값을 비교한다.
+         *
+         * @method intersects
+         * @param toIntersect {adun.Geom.Rectangle}
+         * @return {Boolean{
+         * @public
+         */
+        intersects: function(toIntersect) {
+            if( toIntersect.x > this.right - 1 ) {
+                return false;
+            }
+            if( toIntersect.right -1 < this.x ) {
+                return false;
+            }
+            if( toIntersect.bottom - 1 < this.y ) {
+                return false;
+            }
+            if( toIntersect.y > this.bottom - 1 ) {
+                return false;
+            }
+
+            return true;
+        },
+
+        /**
+         * 만약 매개변수로 받은 Rectangle 객체가 이 Rectangle 객체와 교차(충돌)한다면
+         * 교차하는 영역의 새로운 Rectangle 객체를 반환한다.
+         * 만약 교차하지 않는다면 프로퍼티값을 0으로 가진 빈 Rectangle 객체를 반환한다.
+         *
+         * @method intersection
+         * @param toIntersect {adun.Geom.Rectangle}
+         * @param [output] {adun.Geom.Rectangle}
+         * @return {adun.Geom.Rectangle}
+         * @public
+         */
+        intersection: function(toIntersect, output) {
+            if( adun.isUndefined(output) ) { output = new adun.Geom.Rectangle(); }
+
+            if( this.intersects(toIntersect) == true ) {
+                output.x = Math.max(toIntersect.x, this.x);
+                output.y = Math.max(toIntersect.y, this.y);
+                output.width = Math.min(toIntersect.right, this.right) - output.x;
+                output.height = Math.min(toIntersect.bottom, this.bottom) - output.y;
+            }
+
+            return output;
+        },
+
+        /**
+         * 이 Rectangle 객체가 empty(비어있는지)인지 반환한다.
+         *
+         * @method isEmpty
+         * @returns {Boolean}
+         * @public
+         */
+        isEmpty: function() {
+            return this.width < 1 || this.height < 1;
+        },
+
+        /**
+         * 이 Rectangle 객체와 매개변수로 받은 Rectangle 사이의 중복을 검사하여 각각의 프로퍼티에 부울값을 가진 객체를 반환합니다.
+         *
+         * @method overlap
+         * @param rect {adun.Geom.Recangle}
+         * @return {{top: boolean, bottom: boolean, left: boolean, right: boolean, contains: boolean, contained: boolean}}
+         * @public
+         */
+        overlap: function(rect) {
+            var result = { top: false, bottom: false, left: false, right: false, contains: false, contained: false };
+            var interRect = this.intersection(rect);
+
+            if( interRect.isEmpty() ) {
+                return result;
+            }
+
+            if( interRect.containsRect(rect) ) {
+                result.contains = true;
+            }
+
+            if( rect.containsRect(this) ) {
+                result.contained = true;
+            }
+
+            if( this.top < rect.top ) {
+                result.top = true;
+            }
+
+            if( this.bottom < rect.bottom ) {
+                result.bottom = true;
+            }
+
+            if( this.left < rect.left ) {
+                result.left = true;
+            }
+
+            if( this.right > rect.right ) {
+                result.right = true;
+            }
+
+            return result;
+        },
+
+        /**
+         * 지정된 크기만큼 Rectangle 객체의 위치를 조정합니다.
+         *
+         * @method offset
+         * @param dx {Number} Moves the x value of the Rectangle object by this amount
+         * @param dy {Number} Moves the y value of the Rectangle object by this amount
+         * @return {adun.Geom.Rectangle}
+         * @public
+         */
+        offset: function(dx, dy) {
+            if( !isNaN(dx) && !isNaN(dy) ) {
+                this.x += dx;
+                this.y += dy;
+            }
+
+            return this;
+        },
+
+        /**
+         * 지정된 포인트의 크기만큼 Rectangle 객체의 위치를 조정합니다.
+         *
+         * @method offsetPoint
+         * @param point {adun.Geom.Point}
+         * @return {adun.Geom.Rectangle}
+         * @public
+         */
+        offsetPoint: function(point) {
+            return this.offset(point.x, point.y);
+        },
+
+        /**
+         * Rencatngle 객체의 모든 프로퍼티 값을 0으로 설정합니다.
+         *
+         * @method setEmpty
+         * @return {adun.Geom.Rectangle}
+         * @public
+         */
+        setEmpty: function() {
+            return this.setTo(0, 0, 0, 0);
+        },
+
+        /**
+         * 매개변수로 받은 Rectangle 객체와 합집합으로 하여 새로운 Rectangle 객체를 반환합니다.
+         * 두개의 사각형 사이의 수직 수평공간을 채움으로써 새로운 사각형 객체를 반환합니다.
+         *
+         * @param toUnion
+         * @param output
+         * @returns {*|adun.Geom.Circle|adun.Geom.Line|adun.Geom.Rectangle|Kiwi.Geom.Circle|Kiwi.Geom.Line}
+         */
+        union: function(toUnion, output) {
+            if( adune.isUndefined(output) ) { output = new adun.Geom.Rectangle(); }
+
+            return output.setTo(Math.min(toUnion.x, this.x), Math.min(toUnion.y, this.y), Math.max(toUnion.right, this.right), Math.max(toUnion.bottom, this.bottom));
+        },
+
+        scale: function() {
+            // 트랜스폼
         }
+
+
 
 
     });
 })();
 
+// #Point
+/**
+ * Point
+ * 포인트(요점)
+ *
+ * 수평축을 나타내는 x, 수직 축을 나타내는 y등 2차원 좌표계에서 위치를 나타낸다.
+ *
+ * @Class Point
+ * @namespace Adun.Geom
+ * @constructor
+ * @param [x=0] {Number} x 좌표
+ * @param [y=0] {Number} y 좌표
+ * @return {adun.Geom.Point}
+ */
+(function() {
+    'use strict';
+    var Point = adun.Geom.Point = adun.Class({
+        'TYPE': 'Point',
+
+        init: function(x, y) {
+
+            this.setTo(x, y);
+
+        },
+
+        /**
+         * x값과 y값을 설정한다.
+         *
+         * @method setTo
+         * @param x {Number}
+         * @param y {Number}
+         * @returns {adun.Geom.Point}
+         */
+        setTo: function(x, y) {
+            this.x = x || 0;
+            this.y = y || 0;
+
+            return this;
+        },
+
+        /**
+         * 극좌표의 한쌍을 데카르트 포인트 좌표계로 전환시킨다음 포인스인스턴스에 설정한다.
+         * 극좌표: 평면상의 점을 원점으로부터의 거리 r과 시작선과의 이루는 각 θ로 나타내는 방법
+         * 데크르트 좌표: 세 개의 축(일반적으로 X, Y, Z축)을 이용한 좌표계에서 공간상의 한 지점의 위치를 나타내는 좌표
+         *
+         * @mehtod polar
+         * @param distance {Number}
+         * @param angle {Number}
+         * @return {adun.Geom.Point}
+         * @public
+         */
+        polar: function(distance, angle) {
+            this.x = distance * Math.cos(angle);
+            this.y = distance * Math.sin(angle);
+
+            return this;
+        },
+
+        /**
+         * 매개변수로 받은 포인트 객체와 이 포인트 갭체를 '합'한 새로운 포인트 객체를 반환한다.
+         *
+         * @method add
+         * @param toAdd {adun.Geom.Point}
+         * @param output {adun.Geom.Point}
+         * @return {adun.Geom.Point}
+         * @public
+         */
+        add: function(toAdd, output) {
+            if( adun.isUndefined(ouput) ) { output = new adun.Geom.Point(); }
+
+            return output.setTo(this.x + toAdd.x, this.y + toAdd.y);
+        },
+
+        /**
+         * 주어진 좌표를 더한다.
+         *
+         * @method addTo
+         * @param x {Number}
+         * @param y {Number}
+         * @return {adun.Geom.Point}
+         * @public
+         */
+        addTo: function(x, y) {
+            if( adun.isUndefined(x) ) { x = 0; }
+            if( adun.isUndefined(y) ) { y = 0; }
+
+            return this.setTo(this.x + x, this.y + y);
+        },
+
+        /**
+         * 매개변수로 받은 포인트 객체와 이 포인트 갭체를 '차'한 새로운 포인트 객체를 반환한다.
+         *
+         * @method subtract
+         * @param point {adun.Geom.Point}
+         * @param output {adun.Geom.Point}
+         * @return {adun.Geom.Point}
+         * @public
+         */
+        subtract: function(point, output) {
+            if( adun.isUndefined(ouput) ) { output = new adun.Geom.Point(); }
+
+            return output.setTo(this.x + point.x, this.y + point.y);
+        },
+
+        /**
+         * 주어진 좌표를 뺀다.
+         *
+         * @method subtractFrom
+         * @param x {Number}
+         * @param y {Number}
+         * @return {adun.Geom.Point}
+         * @public
+         */
+        subtractFrom: function(x, y) {
+            if( adun.isUndefined(x) ) { x = 0; }
+            if( adun.isUndefined(y) ) { y = 0; }
+
+            return this.setTo(this.x - x, this.y - y);
+        },
+
+        /**
+         * invert(뒤집다)
+         * x, y값을 뒤집는다.
+         *
+         * @mthod invert
+         * @return {adun.Geom.Point}
+         * @public
+         */
+        invert: function() {
+            return this.setTo(this.y, this.x);
+        },
+
+        /**
+         * 매개변수로 받은 min, max사이의 값으로 x,y 값을 고정시킨다.
+         *
+         * @method clamp
+         * @param min {Number}
+         * @param max {Number}
+         * @return {adun.Geom.Point}
+         * @public
+         */
+        clamp: function(min, max) {
+            this.clampX(min, max);
+            this.clampY(min, max);
+
+            return this;
+        },
+
+        /**
+         * 매개변수로 받은 min, max사이의 값으로 x값을 고정시킨다.
+         *
+         * @method clampX
+         * @param min {Number}
+         * @param max {Number}
+         * @return {adun.Geom.Point}
+         * @public
+         */
+        clampX: function(min, max) {
+            this.x = Math.max(Math.min(this.x, max), min);
+
+            return this;
+        },
+
+        /**
+         * 매개변수로 받은 min, max사이의 값으로 y값을 고정시킨다.
+         *
+         * @method clampX
+         * @param min {Number}
+         * @param max {Number}
+         * @return {adun.Geom.Point}
+         * @public
+         */
+        clampY: function(min, max) {
+            this.y = Math.max(Math.min(this.y, max), min);
+
+            return this;
+        },
+
+        /**
+         * 같은 프로퍼티 값을 가진 새로운 Point 객체를 반환한다.
+         *
+         * @method clone
+         * @param [output=adun.Geom.Point] {adun.Geom.Point}
+         * @return {adun.Geom.Point}
+         * @public
+         */
+        clone: function(output) {
+            if( adun.isUndefined(output) ) { output = new adun.Geom.Point(); }
+
+            return output.setTo(this.x, this.y);
+        },
+
+        /**
+         * 다른 Point 객체로부터 프로퍼티 x, y값을 이 Point 객체로 복사한다.
+         *
+         * @method copyFrom
+         * @param source {adun.Geom.Point}
+         * @return {adun.Geom.Point}
+         * @public
+         */
+        copyFrom: function(source) {
+            return this.setTo(source.x, source.y);
+        },
+
+        /**
+         * 이 Point 객체의 프로퍼티 값을 파라미터로 받은 Point 객체에 복사하여 파라미터로 받은 Point 객체를 반환한다.
+         *
+         * @param target {adun.Geom.Point} this 객체를 복사하여 반환할 객체
+         * @return {adun.Geom.Point}
+         * @public
+         */
+        copyTo: function(target) {
+            return target.copyFrom(this);
+        },
+
+        /**
+         * 현재 Point 객체로부터 주어진 Point 객체의 각도를 반환한다.
+         *
+         * @method angleTo
+         * @param target {adun.Geom.Point}
+         * @return {number} angle to point
+         */
+        angleTo: function(target) {
+            return Math.atan2(target.y - this.y, target.x - this.x);
+        },
+
+        /**
+         * 현재 Point 객체로부터 주어진 X,Y좌표의 각도를 반환한다.
+         *
+         * @method angleTo
+         * @param x {Number}
+         * @param y {Number}
+         * @return {number} angle to point
+         */
+        angleToXY: function(x, y) {
+            return Math.atan2(y - this.y, x - this.x);
+        },
+
+        /**
+         * 현재 Point 객체로부터 주어진 Point 객체 까지의 거리를 반환한다.
+         *
+         * @method distanceTo
+         * @param target {adun.Geom.Point}
+         * @param [round=false] {boolean} Round the distance to the nearest integer (default false)
+         * @return {number} angle to point
+         */
+        distanceTo: function(target, round) {
+            if( adun.isUndefined(round) ) { round = false; }
+
+            var dx = this.x - target.x;
+            var dy = this.y - target.y;
+
+            if( round ) {
+                return Math.round(Math.sqrt(dx * dx, dy * dy));
+            }
+
+            return Math.sqrt(dx * dx, dy * dy);
+        },
+
+        /**
+         * 현재 Point 객체로부터 주어진 XY좌표 까지의 거리를 반환한다.
+         *
+         * @method distanceTo
+         * @param x {Number}
+         * @param y {Number}
+         * @param [round=false] {boolean} Round the distance to the nearest integer (default false)
+         * @return {number} angle to point
+         */
+        distanceToXY: function(x, y, round) {
+            if( adun.isUndefined(round) ) { round = false; }
+
+            var dx = this.x - x;
+            var dy = this.y - y;
+
+            if( round ) {
+                return Math.round(Math.sqrt(dx * dx, dy * dy));
+            }
+
+            return Math.sqrt(dx * dx, dy * dy);
+        },
+
+        /**
+         * 두 Point 객체사이의 거리가 두 번째 매개변수의 값보다 같거나 큰지 반환한다.
+         *
+         * @method distanceCompare
+         * @param target {adun.Geom.Point}
+         * @param distance {Number}
+         * @return {Boolean}
+         */
+        distanceCompare: function(target, distance) {
+            return this.distanceTo(target) >= distance;
+        },
+
+        /**
+         * 파라미터로 받은 Point 객체와 프로퍼티 x, y값이 같은지 비교한다.
+         *
+         * @method equals
+         * @param toCompare {adun.Geom.Point}
+         * @return {Boolean}
+         * @public
+         */
+        equals: function(toCompare) {
+            return this.x === toCompare.x && this.y === toCompare.y;
+        },
+
+        /**
+         * 주어진 값만큼 좌표를 조정한다.
+         *
+         * @method offset
+         * @param dx {Number}
+         * @param dy {Number}
+         * @return {adun.Geom.Point}
+         * @public
+         */
+        offset: function(dx, dy) {
+            this.x += dx;
+            this.y += dy;
+
+            return this;
+        },
+
+        getCSS: function() {
+            return this.x + 'px ' + this.y + 'px';
+        }
+    });
+
+    /**
+     * 두 Point 객체간의 거리를 반환한다.
+     *
+     * @method distanceBetween
+     * @param pointA {adun.Geom.Point} The first Point object.
+     * @param pointB {adun.Geom.Point} The second Point object.
+     * @param [round=false] {boolean} Round the distance to the nearest integer (default false)
+     * @return {Number} The distance between the two Point objects.
+     * @static
+     */
+    Point.distanceBetween = function(pointA, pointB, round) {
+        if( adun.isUndefined(round) ) { round = false; }
+
+        var dx = pointA.x - pointB.x;
+        var dy = pointA.y - pointB.y;
+
+        if( round ) {
+            return Math.round(Math.sqrt(dx * dx, dy * dy));
+        }
+
+        return Math.sqrt(dx * dx, dy * dy);
+    };
+
+
+    /**
+     * 극좌표의 한쌍을 데카르트 포인트 좌표계로 전환시킨다음 t새로운 포인트 인스턴스에 설정한다음 반환한다.
+     * 극좌표: 평면상의 점을 원점으로부터의 거리 r과 시작선과의 이루는 각 θ로 나타내는 방법
+     * 데크르트 좌표: 세 개의 축(일반적으로 X, Y, Z축)을 이용한 좌표계에서 공간상의 한 지점의 위치를 나타내는 좌표
+     *
+     * @mehtod polar
+     * @param distance {Number}
+     * @param angle {Number}
+     * @return {adun.Geom.Point}
+     * @static
+     */
+    Point.polar = function(length, angle) {
+        return new Point(length * Math.cos(angle), length * Math.sin(angle));
+    };
+
+    /**
+     * interpolation(보간): 두 점을 연결하는 방법을 의미한다.
+     * 선형 보간법(線形補間法, linear interpolation)은 끝점의 값이 주어졌을 때 그 사이에 위치한 값을 추정하기 위하여 직선 거리에 따라 선형적으로 계산하는 방법이다.
+     * 선형 보간법은 1차원 직선상에서 이루어지는 보간법이다.
+     *
+     * 지정한 두 Point 객체 사이의 부분을 반환한다..
+     * 매개변수 f는 pointA와 pointB로 지정된 위치에 상대적으로 어디에 위치잘히를 결정한다.
+     *
+     * 매개변수 f값은 0 ~ 1 이다.
+     * 1에 가까울수록 pointA에 가깝다.
+     * 0에 가까울수록 pointB에 가깝다.
+     *
+     *
+     * @method interpolate
+     * @param pointA {adun.Geom.Point}
+     * @param pointB {adun.Geom.Point}
+     * @param f {Number} 두점 사이의 보간 수준이다. 새로운지점과, pt1, pt2, 사이의 선을 따를것이다 만약 f=1이면 pointA가 반환되고 f=0이며 fointB가 반환된다.
+     * @return {adun.Geom.Point}
+     * @static
+     */
+    Point.interpolate = function(pointA, pointB, f) {
+        var xDiff = pointB.x - pointA.x;
+        var yDiff = pointB.y - pointA.y;
+
+        return new adun.Geom.Point(pointB.x - xDiff * f, pointB.y - yDiff * f);
+    }
+
+})();
 // #Intersect
 /**
  * Intersect
