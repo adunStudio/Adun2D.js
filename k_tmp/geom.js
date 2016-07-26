@@ -1957,6 +1957,75 @@
     }
 
 })();
+
+// #Vector2
+/**
+ * Vector2
+ * 벡터2
+ * 움직이고 조작하여 x와 y벡터 요소를 저장하기 위한 2차원 벡터 개체
+ *
+ * @Class Vector2
+ * @namespace Adun.Geom
+ * @constructor
+ * @param [x=0] {Number} 벡터의 x 요소
+ * @param [y=0] {Number} 벡터의 y 요소
+ * @return {adun.Geom.Vector2}
+ */
+(function() {
+     'use strict';
+    var Vector2 = adun.Geom.Vector2 = adun.Class({
+        'TYPE': 'Vector2',
+
+        init: function() {
+
+            this.setTo(x, y);
+        },
+
+        setTo: function(x, y) {
+            this.x = x || 0;
+            this.y = y || 0;
+
+            return this;
+        }
+    });
+
+    /**
+     * 각도로부터 새로운 Vector2 객체를 반환한다.
+     *
+     * @method fromAnagle
+     * @param angle {Number}
+     * @return {adun.Geom.Vector2}
+     * @static
+     */
+    Vector2.fromAngle = function(angle) {
+        return new Vector2(Math.cos(angle), Math.sin(angle));
+    };
+
+    /**
+     * 주어진 radius값 안에서 랜덤 프로퍼티를 가진 (새로운)Vector2 객체를 반환한다.
+     * @method randomRadius
+     * @param radius {Number}
+     * @return {adun.Geom.Vector2}
+     * @statice
+     */
+    Vector2.randomRadius = function(radius) {
+        return new Vector2(Math.random() * 2 - 1, Math.random() * 2 - 1).multiplyScalar(radius);
+    };
+
+    /**
+     * 포인트로부터 새로운 Vector2 객체를 반환한다.
+     *
+     * @method fromPoint
+     * @param point {adun.Geom.Point}
+     * @return {adun.Geom.Vector2}
+     * @static
+     */
+    Vector2.fromPoint = function(point) {
+        return new Vector2(point.x, point.y);
+    }
+})();
+
+
 // #Intersect
 /**
  * Intersect
