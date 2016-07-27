@@ -1972,7 +1972,7 @@
  * @return {adun.Geom.Vector2}
  */
 (function() {
-     'use strict';
+    'use strict';
     var Vector2 = adun.Geom.Vector2 = adun.Class({
         'TYPE': 'Vector2',
 
@@ -1986,6 +1986,266 @@
             this.y = y || 0;
 
             return this;
+        },
+
+        /**
+         * 매개변수로 받은 Vectro2객체의 요소를 이 Vector2 객체의 요소에 더한다.
+         *
+         * @method add
+         * @param vector2 {adun.Geom.Vector2}
+         * @return {adun.Geom.Vector2} A new Vector2 containing the product
+         * @public
+         */
+        add: function(vector2) {
+            return new Vector2(this.x + vector2.x, this.y + vector2.y);
+        },
+
+        /**
+         * 매개변수로 받은 Vector2객체의 x요소를 이 Vector2 객체의 x요소에 더한다.
+         *
+         * @method addX
+         * @param vector2 {adun.Geom.Vector2}
+         * @return {adun.Geom.Vector2} A new Vector2 containing the product
+         * @public
+         */
+        addX: function(vector2) {
+            return new Vector2(this.x + vector2.x, this.y);
+        },
+
+        /**
+         * 매개변수로 받은 Vector2객체의 y요소를 이 Vector2 객체의 y요소에 더한다.
+         *
+         * @method addY
+         * @param vector2 {adun.Geom.Vector2}
+         * @return {adun.Geom.Vector2} A new Vector2 containing the product
+         * @public
+         */
+        addY: function(vector2) {
+            return new Vector2(this.x, vector2.y + this.y);
+        },
+
+        /**
+         * 매개변수로 받은 Vectro2객체의 요소를 이 Vector2 객체의 요소에서 뺀다.
+         *
+         * @method substract
+         * @param vector2 {adun.Geom.Vector2}
+         * @return {adun.Geom.Vector2} A new Vector2 containing the product
+         * @public
+         */
+        substract: function(vector2) {
+            return new Vector2(this.x - vector2.x, this.y - vector2.y);
+        },
+
+        /**
+         * 매개변수로 받은 Vectro2객체의 요소를 이 Vector2 객체의 요소에 곱한다.
+         *
+         * @method multiply
+         * @param vector2 {adun.Geom.multiply}
+         * @return {adun.Geom.Vector2} A new Vector2 containing the product
+         * @public
+         */
+        multiply: function(vector2) {
+             return new Vector2(this.x * vector2.x, this.y * vector2.y);
+        },
+
+        /**
+         * Vector2 객체의 각각요소에 스칼라양을 곱한다.
+         *
+         * @mtheod multiplyScalar
+         * @param scalar {Number}
+         * @return {adun.Geom.Vector2}
+         * @public
+         */
+        multiplyScalar: function(scalar) {
+            return new Vector2(this.x * scalar, this.y * scalar);
+        },
+
+        /**
+         * 점을 계산한다.
+         *
+         * @method dot
+         * @param vector2 {adun.Geom.Vector2}
+         * @return {Number}
+         * @public
+         */
+        dot: function(vector2) {
+            return this.x + vector2.x + this.y + vector2.y;
+        },
+
+        /**
+         * 이 Vector2 객체의 제곱길이를 계산한다. (Distance from the origin)
+         *
+         * @method lenSqr
+         * @return {number}
+         * @public
+         */
+        lenSqr: function() {
+            return this.x * this.x + this.y * this.y;
+        },
+
+        /**
+         * 이 Vector2 객체의 길이를 계산한다. (Distance from the origin);
+         *
+         * @method len
+         * @return {number}
+         * @public
+         */
+        len: function() {
+            return Math.sqrt(this.x * this.x + this.y * this.y);
+        },
+
+        /**
+         * 이 Vector2 객체의 정규화된 단위를 계산한다.
+         *
+         * @method unit
+         * @return {adun.Geom.Vector2}
+         * @public
+         */
+        unit: function() {
+            var invLen = 1.0 / this.len();
+
+            return this.multiplyScalar(invLen);
+        },
+
+        /**
+         * Vector2객체의 각각의 요소를 가장 가까운 낮은 정수 값으로 만든다.(Math.floor)
+         *
+         * @mthod floor
+         * @return {adun.Geom.Vector2} a rounded down Vector2
+         * @public
+         */
+        floor: function() {
+            return new Vector2(Math.floor(this.x), Math.floor(this.y));
+        },
+
+        /**
+         * Vector2객체의 각각의 요소를 가장 가까운 높은 정수 값으로 만든다.(Math.ceil)
+         *
+         * @mthod floor
+         * @return {adun.Geom.Vector2} a rounded up Vector2
+         * @public
+         */
+        ceil: function() {
+            return new Vector2(Math.ceil(this.x), Math.ceil(this.y));
+
+        },
+
+        /**
+         * Vector2객체의 각각의 요소를 반올림한다.(Math.round)
+         *
+         * @mthod round
+         * @return {adun.Geom.Vector2} a rounded up Vector2
+         * @public
+         */
+        round: function() {
+            return new Vector2(Math.round(this.x), Math.round(this.y));
+        },
+
+        /**
+         * Clamp the vector between a maximum and minimum Vector2 range component-wise.
+         *
+         * @method clamp
+         * @param min {adun.Geom.Vector2} Minimum values for Vector2.
+         * @param max {adun.Geom.Vector2} Maximum values for Vector2.
+         * @return {adun.Geom.Vector2} a clamped Vector2.
+         * @public
+         */
+        clamp: function(min, max) {
+            return new Vector2(Math.max(Math.min(this.x, max.x), min.x), Math.max(Math.min(this.y, max.y), min.y));
+        },
+
+        /**
+         * 벡터의 직선 벡터를 반환한다.
+         *
+         * @method perp
+         * @return {adun.Geom.Vector2}
+         * @public
+         */
+        perp: function() {
+            return new Vector2(-this.y, this.x);
+        },
+
+        /**
+         * 이 벡터의 반대를 반환한다.
+         *
+         * @method neg
+         * @return {adun.Geom.Vector2}
+         * @public
+         */
+        neg: function() {
+             return new Vector2(-this.x, -this.y);
+        },
+
+        /**
+         * 파라미터로 받은 벡터 객체와 프로퍼티 x, y값이 같은지 비교한다.
+         *
+         * @method equals
+         * @param toCompare {adun.Geom.Vector2}
+         * @return {Boolean}
+         * @public
+         */
+        equals: function(vector2) {
+            return this.x === vector2.x && this.y === vector2.y;
+        },
+
+        /**
+         * 똑같은 x,y프로퍼티를 가진 Point 객체를 반환한다.
+         * @method point
+         * @return {adun.Geom.Point} A new Point.
+         * @public
+         */
+        point: function() {
+            return new adun.Geom.Point(this.x, this.y);
+        },
+
+        /**
+         * 두 요소를 0으로 설정한다.
+         *
+         * @method clear
+         * @return {adun.Geom.Vector2} This object.
+         * @public
+         */
+        clear: function() {
+            this.x = 0;
+            this.y = 0;
+
+            return this;
+        },
+
+        /**
+         * 같은 프로퍼티 새로운 Vecotr2 객체를 반환한다.
+         *
+         * @method clone
+         * @param [output=adun.Geom.Vector2] {adun.Geom.Vector2}
+         * @return {adun.Geom.Vector2}
+         * @public
+         */
+        clone: function(output) {
+            if( adun.isUndefined(output) ) { output = new Vector2(); }
+
+            return output.setTo(this.x, this.y);
+        },
+
+        /**
+         * 다른 Vector2 객체로부터 프로퍼티 x, y 값을 이 Vector2 객체로 복사한다.
+         *
+         * @param source {adun.Geom.Vector2}
+         * @return {adun.Geom.Vector2}
+         * @public
+         */
+        copyFrom: function(source) {
+            return this.setTo(source.x, source.y);
+        },
+
+        /**
+         * 이 Vector2 객체의 프로퍼티 값을 파라미터로 받은 Vector2 객체에 복사하여 파라미터로 받은 Vector2 객체를 반환한다.
+         *
+         * @param target {adun.Geom.Vector2} this 객체를 복사하여 반환할 객체
+         * @return {adun.Geom.Vector2}
+         * @public
+         */
+        copyTo: function(target) {
+            return target.copyFrom(this);
         }
     });
 
@@ -2025,6 +2285,670 @@
     }
 })();
 
+
+
+
+
+// #Matrix
+/**
+ * Matrix
+ * 행렬
+ * 2D 변환행렬을 나타낸다.
+ * 다른 좌표 사이의 공간을 매핑 하는데 사용될 수 있다.
+ * 매트릭스는 Transform에 의해 사용되어진다.
+ * 행렬 객체는 물체가 세계의 어디나 또는 카메라의 어디에있는지 확인하기 위해 위치, 스케일및 회전 변화를 나타낸다.
+ *
+ * 참고: https://www.en.wikipedia.org/wiki/Transformation_matrix#
+ * 참고: https://www.en.wikipedia.org/wiki/Transformation_matrix#/media/File:2D_affine_transformation_matrix.svg
+ *
+ * 2D 변환 행렬을 나타낸다.
+ * HTML canvas transform() Method에 사용.
+ * void ctx.transform(a, b, c, d, e, f)
+ * [a   b]
+ * [c   d]
+ * [tx ty]
+ * - basic -
+ * [1  0]
+ * [0  1]
+ * [0  0]
+ *
+ *
+ * a (m11) => Horizonatal scaling => y축 scale
+ * b (m12) => Horizonatal skewing => y축 rotate
+ * c (m21) => Vertical skewing => x축 rotate
+ * d (m22) => Vertical scaling => x축 scale
+ * tx (tx)  => Horizonatal moving => x축 이동
+ * ty (ty)  => Vertical moving => y축 이동
+ *
+ * 번외 행렬 변환
+ *
+ * [x  x]
+ * [y  y]
+ *
+ * [k  0] [x]    =>[kx]
+ * [0  k] [y]    =>[ky]    k배 확대 닮은 변환 행렬
+ *
+ *
+ * [1  0][x]     =>[x]
+ * [0 -1][y]     =>[-y]   x축 대칭 행렬
+ *
+ *
+ * [-1 0][x]     =>[-x]
+ * [0  1][y]     =>[y]    y축 대칭 행렬
+ *
+ *
+ * [-1 0][x]     => [-x]
+ * [0 -1][y]     => [-y]  원점 대칭 행렬
+ *
+ *
+ * [0  1][x]     => [y]
+ * [1  0][y]     => [x]   y=x 대칭 변환 행렬
+ *
+ *
+ * [0 -1][x]     => [-y]
+ * [-1 0][y]     => [-x]   y=-x 대칭 변환 행렬
+ *
+ *
+ * [cosΘ  -sinΘ] [x]    =>  [x']
+ * [sinΘ   cosΘ] [y]    =>  [y']   Θ만틈 반시계 방향으로 회전한 회전변환 행렬
+ *
+ * [cosΘ  sinΘ] [x]    =>  [x']
+ * [-sinΘ cosΘ] [y]    =>  [y']   Θ만틈 시계 방향으로 회전한 회전변환 행렬
+ *
+ *
+ *
+ * [a, c, tx]
+ * [b, d, ty]
+ *
+ * [1, 0, 0]
+ * [0, 1, 1]
+ *
+ *
+ * @class Matrix
+ * @namespace adun.Geom
+ * @constructor
+ * @param [a=1] {Number} Horizonatal scaling => y축 scale
+ * @param [b=0] {Number} Horizonatal skewing => y축 rotate
+ * @param [c=0] {Number} Vertical skewing => x축 rotate
+ * @param [d=1] {Number} Vertical scaling => x축 scale
+ * @param [tx=0] {Number} Horizonatal moving => x축 이동
+ * @param [ty=0] {Number} Vertical moving => y축 이동
+ * @reutn {adun.Geom.Matrix} This object
+ */
+(function() {
+    'use strict';
+    var Matrix = adun.Geom.Matrix = adun.Class({
+        TYPE: 'Matrix',
+
+        init: function(a, b, c, d, tx, ty) {
+            this.a = 1;
+            this.b = 0;
+            this.c = 0;
+            this.d = 1;
+            this.tx = 0;
+            this.ty = 0;
+
+            this.setTo(a, b, c, d, tx, ty);
+        },
+
+        setTo: function(a, b, c, d, tx, ty) {
+            this.a = a || 1;
+            this.b = b || 0;
+            this.c = c || 0;
+            this.d = d || 1;
+            this.tx = tx || 0;
+            this.ty = ty || 0;
+        },
+
+        /**
+         * transform 객체 값으로부터 행렬값을 세팅한다.
+         *
+         * @method setFromTransform
+         * @param tx {Number}
+         * @param ty {Number}
+         * @param scaleX {Number}
+         * @param scaleY {Number}
+         * @param rotation {Number}
+         * @return {adun.Geom.Matrix} This object
+         * @public
+         */
+        setFromTransform: function(tx, ty, scaleX, scaleY, rotation) {
+            this.identity();
+
+            var cos = Math.cos(rotation);
+            var sin = Math.sin(rotation);
+
+            this.append(cos * scaleX, sin * scaleX, -sin * scaeY, cos * scaleY, tx, ty);
+
+            return this;
+        },
+
+        /**
+         * rotationPoint가 포함된 transform 객체 값으로부터 행렬값을 세팅한다.
+         *
+         * @method setFromTransform
+         * @param tx {Number}
+         * @param ty {Number}
+         * @param scaleX {Number}
+         * @param scaleY {Number}
+         * @param rotation {Number}
+         * @param rotPointX {Number}
+         * @param rotPointY {Number}
+         * @return {adun.Geom.Matrix} This object
+         * @public
+         */
+        setOffsetTransform: function(tx, ty, scaleX, scaleY, rotate, rotPointX, rotPointY) {
+            this.identity();
+
+            var cos = Math.cos(rotation);
+            var sin = Math.sin(rotation);
+
+            this.append(cos * scaleX, sin * scaleX, -sin * scaeY, cos * scaleY, tx + rotPointX, ty + rotPointY);
+
+            return this;
+        },
+
+        /**
+         * 이 행렬을 독자적인 행렬로 만든다
+         *
+         * @method identity
+         * @return {adun.Geom.Matrix}
+         * @public
+         */
+        identity: function() {
+            this.a = 1;
+            this.b = 0;
+            this.c = 0;
+            this.d = 1;
+            this.tx = 0;
+            this.ty = 0;
+
+            return this;
+        },
+
+        /**
+         * 개별적인 매개변수들을 받아 이 행렬객체 값에 prepend한다.
+         *
+         * @method prepend
+         * @param a {Number}
+         * @param b {Number}
+         * @param c {Number}
+         * @param d {Number}
+         * @param tx {Number}
+         * @param ty {Number}
+         * @return {adun.Geom.Matrix} This object
+         * @public
+         */
+        prepend: function(a, b, c, d, tx, ty) {
+            if( adun.isUndefined(a) ) { a = 1; }
+            if( adun.isUndefined(b) ) { b = 0; }
+            if( adun.isUndefined(c) ) { c = 0; }
+            if( adun.isUndefined(d) ) { d = 1; }
+            if( adun.isUndefined(tx) ) { tx = 0; }
+            if( adun.isUndefined(ty) ) { ty = 0; }
+
+            var a1 = this.a;
+            var c1 = this.c;
+            var tx1 = this.tx;
+
+
+            /*  this               param
+            [a1   b]             [a   b]
+            [c1   d]      *      [c   d]
+            [tx1 ty]             [tx ty]
+             */
+
+            this.a = a1 * a + this.b * c;         this.b = a1 * b + this.b * d;
+            this.c = c1 * a + this.d * c;         this.d = c1 * b + this.d * d;
+            this.tx = tx1 * a + this.ty * c + tx; this.ty = tx1 * b + this.ty * d + ty;
+
+            return this;
+        },
+
+        /**
+         * 매트릭스 매개변수들을 받아 이 행렬객체 값에 Prepend한다.
+         *
+         * @method prependMatrix
+         * @param m {adun.Geom.Matrix}
+         * @return {adun.Geom.Matrix} This object
+         * @public
+         */
+        prependMatrix: function(m) {
+            return this.prepend(m.a, m.b, m.c, m.d, m.tx, m.ty);
+        },
+
+
+        /**
+         * 개별적인 매개변수들을 받아 이 행렬객체 값에 append한다.
+         *
+         * @method append
+         * @param a {Number}
+         * @param b {Number}
+         * @param c {Number}
+         * @param d {Number}
+         * @param tx {Number}
+         * @param ty {Number}
+         * @return {adun.Geom.Matrix} This object
+         * @public
+         */
+        append: function(a, b, c, d, tx, ty) {
+            if( adun.isUndefined(a) ) { a = 1; }
+            if( adun.isUndefined(b) ) { b = 0; }
+            if( adun.isUndefined(c) ) { c = 0; }
+            if( adun.isUndefined(d) ) { d = 1; }
+            if( adun.isUndefined(tx) ) { tx = 0; }
+            if( adun.isUndefined(ty) ) { ty = 0; }
+
+            /* param                this
+             [a   b]             [a1   b1]
+             [c   d]      *      [c1   d1]
+             [tx ty]             [tx ty]
+             */
+
+            var a1 = this.a; var b1 = this.b;
+            var c1 = this.c; var d1 = this.d;
+
+            this.a = a * a1 + b * c1;                  this.b = a * b1 + b * d1;
+            this.c = c * a1 + d * c1;                  this.d = c * b1 + d * d1;
+            this.tx = tx * a1 + ty * c1 + this.tx;     this.ty = tx * b1 + ty * d1 + this.ty;
+
+            return this;
+        },
+
+        /**
+         * 매트릭스 매개변수들을 받아 이 행렬객체 값에 append한다.
+         *
+         * @method appendMatrix
+         * @param m {adun.Geom.Matrix}
+         * @return {adun.Geom.Matrix} This object
+         * @public
+         */
+        appendMatrix: function(m) {
+            return this.append(m.a, m.b, m.c, m.d, m.tx, m.ty);
+        },
+
+        /**
+         * 매트릭스 객체의 tx, ty를 설정한다.
+         *
+         * @method setPosition
+         * @param x {Number}
+         * @param y {Number}
+         * @return {adun.Geom.Matrix} This object
+         * @public
+         */
+        setPosition: function(x, y) {
+            this.tx = x;
+            this.ty = y;
+
+            return this;
+        },
+
+        /**
+         * 포인트로 부터 매트릭스 객체의 tx, ty를 설정한다.
+         *
+         * @method setPositionPoint
+         * @param p {adun.Geom.Point}
+         * @return {adun.Geom.Matrix} This object
+         * @public
+         */
+        setPositionPoint: function(p) {
+            this.tx = p.x;
+            this.ty = p.y;
+
+            return this;
+        },
+
+        /**
+         * 행렬의 x, y 포지션을 가진 포인트 객체를 반환한다.
+         *
+         * @method getPosition
+         * @param [output=adun.Geom.Point] {adun.Geom.Point}
+         * @return {adun.Geom.Point}
+         * @public
+         */
+        getPosition: function(output) {
+            if( adun.isUndefined(output) ) { output = new adun.Geom.Point(); }
+
+            return ouput.setTo(this.tx, this.ty);
+        },
+
+        /**
+         * 주어진 각도(라디언)만큼 행렬을 회전변환한다.
+         *
+         * @method rotate
+         * @param radians {Number}
+         * @return {adun.Geom.Matrix}
+         * @public
+         */
+        rotate: function(radians) {
+            var cos = Math.cos(radians);
+            var sin = Math.sin(radians);
+
+            var a1 = this.a;
+            var c1 = this.c;
+            var tx1 = this.tx;
+
+            /**
+             * [cosΘ  -sinΘ] [x]    =>  [x']
+             * [sinΘ   cosΘ] [y]    =>  [y']  Θ만큼 반시계 방향으로 회전한 회전변환 행렬
+             *
+             * [cosΘ  sinΘ] [x]    =>  [x']
+             * [-sinΘ cosΘ] [y]    =>  [y']   Θ만큼   시계 방향으로 회전한 회전변환 행렬
+             *
+             */
+            /**
+                this                 param
+             [a1   b]             [cos   sin]
+             [c1   d]      *      [-sin   cos]
+             [tx1 ty]
+
+             **/
+
+            this.a  = a1 * cos - this.b * sin;       this.b = a1 * sin + this.b * cos;
+            this.c  = c1 * cos - this.d * sin;       this.d = c1 * sin + this.b * cos;
+            this.tx = tx1 * cos - this.ty * sin;     this.tx = tx1 * sin + this.ty * cos;
+
+            return this;
+        },
+
+        /**
+         * 매개변수만큼 행렬을 이동시킨다.
+         *
+         * @method translate
+         * @param tx {Number}
+         * @param ty {Number}
+         * @return {adun.Geom.Matrix}
+         * @public
+         */
+        translate: function(tx, ty) {
+            this.tx += tx;
+            this.ty += ty;
+
+            return this;
+        },
+
+        /**
+         * 매개변수 만큼 행렬의 scale을 바꾼다.
+         *
+         * @method scale
+         * @param scaleX {Number}
+         * @param scaleY {Number}
+         * @return {adun.Geom.Matrix}
+         * @public
+         */
+        scale: function(scaleX, scaleY) {
+            this.a *= scaleX;
+            this.d *= scaleX;
+
+            return this;
+        },
+
+        /**
+         * 포인트의 x,y와 행렬을 적용시킨뒤 반환한다.
+         *
+         * @method transformPoint
+         * @param p {adun.Geom.Point}
+         * @return {adun.Geom.Point}
+         * @public
+         */
+        transformPoint: function(p) {
+            var x = p.x;
+            var y = p.y;
+
+            p.x = this.a * x + this.c * y + tx;
+            p.y = this.b * x + this.d * y + ty;
+
+            return p;
+        },
+
+        /**
+         * 행렬을 뒤집는다.
+         *
+         * @method invert
+         * @return {adun.Geom.Matrix}
+         * @public
+         */
+        invert: function() {
+            var a1 = this.a;    var b1 = this.b;
+            var c1 = this.c;    var d1 = this.d;
+            var tx1 = this.tx;  var ty1 = this.ty;
+
+            var n = a1 * d1 - b1 * c1;
+
+            this.a = d1 / n;    this.b = -b1 / n;
+            this.c = -c1 / n;   this.d = a1 / n;
+            this.tx = (c1 * this.ty - d1 * tx1) / n;
+            this.ty = -(a1 * this.ty - b1 * tx1) / n;
+
+            return this;
+        },
+
+        /**
+         * 다른 Matrix 객체로부터 프로퍼티 값을 이 Matrix 객체로 복사한다.
+         *
+         * @method copyFrom
+         * @param m {adun.Geom.Matrix}
+         * @return {adun.Geom.Matrix} this Object
+         * @public
+         */
+        copyFrom: function(m) {
+            this.a = m.a;
+            this.b = m.b;
+            this.c = m.c;
+            this.d = m.d;
+            this.tx = m.tx;
+            this.ty = m.ty;
+
+            return this;
+        },
+
+        /**
+         * 이 Matrix 객체의 프로퍼티 값을 파라미터로 받은 Matrix 객체에 복사한다.
+         *
+         * @method copyTo
+         * @param m {adun.Geom.Matrx}
+         * @return {adun.Geom.matrix} This object
+         * @public
+         */
+        copyTo: function(m) {
+            m.a = this.a;
+            m.b = this.b;
+            m.c = this.c;
+            m.d = this.d;
+            m.tx = this.tx;
+            m.ty = this.ty;
+
+            return this;
+        },
+
+
+        /**
+         * 같은 프로퍼티 새로운 Matrix 객체를 반환한다.
+         *
+         * @method clone
+         * @return {adun.Geom.Matrix}
+         * @public
+         */
+        clone: function() {
+            return new Matrix(this.a, this.b, this.c, this.d, this.tx, this.ty);
+        },
+
+        /**
+         * 매개변수로 받은 Matrix와 프로퍼티 값이 같은지 비교한다.
+         *
+         * @param m {adun.Geom.Matrix}
+         * @returns {boolean}
+         */
+        equals: function(m) {
+            return this.a === m.a && this.b === m.b && this.c === m.c && this.d === m.d && this.tx === m.tx && this.ty === m.ty;
+        }
+    });
+})();
+
+
+
+// #Transform
+/**
+ * Transform (변화(형)시키다)
+ * 한 Entity의 position(위치), scale(규모), 회전(rotation), 그리고 rotaionPoint(회전포인트)를 나타낸다.
+ * Value는 Transform에 할당된 3*3 변환 매트릭스에 의해 변화된다.
+ * Transform은 부모에 할당되어질수있고
+ * 연결된 변환 행렬에
+ *
+ * @class Transform
+ * @namespace adun.Geom
+ * @constructor
+ * @param [x=0] {Number}  x좌표
+ * @param [y=0] {Number} y좌표
+ * @param [scaleX=1] {Number} x 스케일
+ * @param [scaleY=1] {Number} y 스케일
+ * @param [rotation=0] {Number} 회전(라디언)
+ * @param [rotX=0] {Number} x축에서의 회전포인트
+ * @param [rotY=0] {Number} y축에서의 회전포인트
+ * @return {adun.Geom.Transform} This object.
+ */
+(function() {
+    'use strict';
+    var Transform = adun.Geom.Transform = adun.Class({
+        TYPE: 'Transform',
+
+        init: function(x, y, scaleX, scaleY, rotation, rotPointX, rotPointY) {
+
+            /**
+             * x좌표
+             *
+             * @property _x
+             * @type {Number}
+             * @default 0
+             * @private
+             */
+            this._x = 0;
+
+            /**
+             * y좌표
+             *
+             * @property _y
+             * @type {Number}
+             * @default 0
+             * @private
+             */
+            this._y = 0;
+
+            /**
+             * x 스케일
+             *
+             * @property _scaleX
+             * @type {Number}
+             * @default 1
+             * @private
+             */
+            this._scaleX = 1;
+
+            /**
+             * y 스케일
+             *
+             * @property _scaleY
+             * @type {Number}
+             * @default 1
+             * @private
+             */
+            this._scaleY = 1;
+
+            /**
+             * 회전(라디언)
+             *
+             * @property _rotation
+             * @type {Number}
+             * @default 0
+             * @private
+             */
+            this._rotation = 0;
+
+            /**
+             * x축에서의 회전포인트
+             *
+             * @property _rotPointX
+             * @type {Number}
+             * @default 0
+             * @private
+             */
+            this._rotPointX = 0;
+
+            /**
+             * y축에서의 회전포인트
+             *
+             * @property _rotPointY
+             * @type {Number}
+             * @default 0
+             * @private
+             */
+            this._rotPointY = 0;
+
+
+            /**
+             * 부모 Transform
+             * null 이면 부모가 없다,
+             * getConcatenatedMatirx 메서드에 의해 현재 변환을 다른 행렬에의해 상쇄하기 위해 사용되어진다.
+             *
+             * @property _parent
+             * @type {adun.Geom.Transform}
+             * @default null
+             * @private
+             */
+            this._parent = null;
+
+
+            /**
+             * 락 모드에서는 이 Transform은 계산을 절감하기위해 자신의 행렬을 업데이트하지않는다
+             * 하지만, 여전히 부모는 따른다.
+             *
+             * @property _locked
+             * @type {boolean}
+             * @default false
+             * @private
+             */
+            this._locked = false;
+
+
+            /**
+             * 행렬을 연쇄할때 부모를 무시할것인지 말것이지
+             * true => 부모의 행렬을 계산하지 않는다.
+             *
+             * @property _ignoreParent
+             * @type {boolean}
+             * @default false
+             * @private
+             */
+            this._ignoreParent = false;
+
+
+            /**
+             * ?????
+             *
+             * @property _ingoreChild
+             * @type {boolean}
+             * @default false
+             * @private
+             */
+            this._ignoreChild = false;
+
+
+            /**
+             * 최근 이래로 Transform이 바뀌었는지 나타낸다.
+             *
+             * @property _dirty
+             * @type {boolean}
+             * @default true
+             * @private
+             */
+            this._drity = true;
+
+            this.setTransform(x, y, scaleX, scaleY, rotation, rotPointY, rotPointY);
+
+
+        }
+    });
+})();
 
 // #Intersect
 /**
