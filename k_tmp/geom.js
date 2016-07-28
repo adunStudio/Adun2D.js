@@ -609,8 +609,8 @@
  * Line
  * 선
  * Line(선) 객체는 두가지 의미가 있는데 필요로 하는 상황에 따라 다르다.
- * 1. 무한한 선
- * 2. 두개의 지정한 위치 사이의 선
+ * 1. 무한한 선                    (직선)
+ * 2. 두개의 지정한 위치 사이의 선 (선분)
  *
  * @Class Line
  * @namespace Adun.Geom
@@ -1083,7 +1083,7 @@
              */
             get: function() {
                 var output = new adun.Geom.Point();
-                return ouput.setTo(Math.round(this.width / 2), Math.round(this.height / 2));
+                return output.setTo(Math.round(this.width / 2), Math.round(this.height / 2));
             }
         },
 
@@ -1222,7 +1222,7 @@
         topLeft: {
             get: function() {
                 var output = new adun.Geom.Point();
-                return ouput.setTo(this.x, this.y);
+                return output.setTo(this.x, this.y);
             },
             /**
              * top
@@ -1632,7 +1632,7 @@
          * @public
          */
         add: function(toAdd, output) {
-            if( adun.isUndefined(ouput) ) { output = new adun.Geom.Point(); }
+            if( adun.isUndefined(output) ) { output = new adun.Geom.Point(); }
 
             return output.setTo(this.x + toAdd.x, this.y + toAdd.y);
         },
@@ -1663,7 +1663,7 @@
          * @public
          */
         subtract: function(point, output) {
-            if( adun.isUndefined(ouput) ) { output = new adun.Geom.Point(); }
+            if( adun.isUndefined(output) ) { output = new adun.Geom.Point(); }
 
             return output.setTo(this.x + point.x, this.y + point.y);
         },
@@ -2437,7 +2437,7 @@
          * @return {adun.Geom.Matrix} This object
          * @public
          */
-        setOffsetTransform: function(tx, ty, scaleX, scaleY, rotate, rotPointX, rotPointY) {
+        setFromOffsetTransform: function(tx, ty, scaleX, scaleY, rotate, rotPointX, rotPointY) {
             this.identity();
 
             var cos = Math.cos(rotation);
@@ -2609,7 +2609,7 @@
         getPosition: function(output) {
             if( adun.isUndefined(output) ) { output = new adun.Geom.Point(); }
 
-            return ouput.setTo(this.tx, this.ty);
+            return output.setTo(this.tx, this.ty);
         },
 
         /**
@@ -2798,13 +2798,13 @@
  * @class Transform
  * @namespace adun.Geom
  * @constructor
- * @param [x=0] {Number}  x좌표
+ * @param [x=0] {Number} x좌표
  * @param [y=0] {Number} y좌표
  * @param [scaleX=1] {Number} x 스케일
  * @param [scaleY=1] {Number} y 스케일
  * @param [rotation=0] {Number} 회전(라디언)
- * @param [rotX=0] {Number} x축에서의 회전포인트
- * @param [rotY=0] {Number} y축에서의 회전포인트
+ * @param [rotX=0] {Number} x축에서의 회전offset
+ * @param [rotY=0] {Number} y축에서의 회전offset
  * @return {adun.Geom.Transform} This object.
  */
 (function() {
@@ -2911,7 +2911,7 @@
 
 
             /**
-             * 행렬을 연쇄할때 부모를 무시할것인지 말것이지
+             * 행렬을 연결할때 부모를 무시할것인지 말것이지
              * true => 부모의 행렬을 계산하지 않는다.
              *
              * @property _ignoreParent
@@ -2923,7 +2923,7 @@
 
 
             /**
-             * ?????
+             * 자식을 무시할것인가
              *
              * @property _ingoreChild
              * @type {boolean}
@@ -2945,7 +2945,520 @@
 
             this.setTransform(x, y, scaleX, scaleY, rotation, rotPointY, rotPointY);
 
+            this._matrix = new adun.Geom.Matrix();
 
+            this._cachedConcatenatedMatrix = new adun.Geom.Matrix();
+
+            this._matrix.setFromOffsetTransform(this.x, this.y, this.scaleX, this.scaleY, this.rotation, this.rotPointX, this.rotPointY);
+        },
+
+        x: {
+            get: function() {
+                return this._x;
+            },
+            /**
+             * x 좌표
+             *
+             * @property x
+             * @type {Number}
+             * @public
+             */
+            set: function(value) {
+                this._x = value;
+                this._dirty = true;
+            }
+        },
+
+        y: {
+            get: function() {
+                return this._y;
+            },
+            /**
+             * y 좌표
+             *
+             * @property y
+             * @type {Number}
+             * @public
+             */
+            set: function(value) {
+                this._y = value;
+                this._dirty = true;
+            }
+        },
+
+        scaleX: {
+            get: function() {
+                return this._scaleX;
+            },
+            /**
+             * x 스케일
+             *
+             * @property scaleX
+             * @type {Number}
+             * @public
+             */
+            set: function(value) {
+                this._scaleX = value;
+                this._dirty = true;
+            }
+        },
+
+        scale: {
+            /**
+             * x, y 스케일 설정한다(set only)
+             *
+             * @property scale
+             * @type {Number}
+             * @public
+             */
+            set: function(value) {
+                this._scaleX = value;
+                this._scaleY = value;
+                this._dirty = true;
+            }
+        },
+
+        scaleY: {
+            get: function() {
+                return this._scaleY;
+            },
+            /**
+             * y 스케일
+             *
+             * @property scaleY
+             * @type {Number}
+             * @public
+             */
+            set: function(value) {
+                this._scaleY = value;
+                this._dirty = true;
+            }
+        },
+
+        rotation: {
+            get: function() {
+                return this._rotation;
+            },
+            /**
+             * 회전(radians)
+             *
+             * @property rotation
+             * @type {Number}
+             * @public
+             */
+            set: function(value) {
+                this._rotation = value;
+                this._dirty = true;
+            }
+        },
+
+        rotPointX: {
+            get: function() {
+                return this.rotPointX;
+            },
+            /**
+             * x회전 offset
+             *
+             * @property rotPointX
+             * @type {Number}
+             * @public
+             */
+            set: function(value) {
+                this._rotPointX = value;
+                this._dirty = true;
+            }
+        },
+
+        rotPointY: {
+            get: function() {
+                return this.rotPointT;
+            },
+            /**
+             * y회전 offset
+             *
+             * @property rotPointY
+             * @type {Number}
+             * @public
+             */
+            set: function(value) {
+                this._rotPointY = value;
+                this._dirty = true;
+            }
+        },
+
+        anchorPointX: {
+            get: function() {
+                return (this.rotPointX);
+            },
+            /**
+             * x축 고정적 값(=rotPointX)
+             *
+             * @property anchorPointX
+             * @type {Number}
+             * @public
+             */
+            set: function(value) {
+                this.rotPointX = value;
+            }
+        },
+
+        anchorPointY: {
+            get: function() {
+                return (this.rotPointY);
+            },
+            /**
+             * y축 고정적 값(=rotPointY)
+             *
+             * @property anchorPointY
+             * @type {Number}
+             * @public
+             */
+            set: function(value) {
+                this.rotPointY = value;
+            }
+        },
+
+        matrix: {
+            /**
+             * 사용하고있는 행렬
+             *
+             * @property matrix
+             * @type {adun.Geom.Matrix}
+             * @readOnly
+             * @public
+             */
+            get: function() {
+                return this._matrix;
+            }
+        },
+
+        worldX: {
+            /**
+             * 세계에서의 X
+             *
+             * @property worldX
+             * @type {Number}
+             * @readOnly
+             * @public
+             */
+            get: function() {
+                return this.getConcatenatedMatrix().tx - this._rotPointX;
+            }
+        },
+
+        worldY: {
+            /**
+             * 세계에서의 y
+             *
+             * @property worldY
+             * @type {Number}
+             * @readOnly
+             * @public
+             */
+            get: function() {
+                return this.getConcatenatedMatrix().ty - this._rotPointY;
+            }
+        },
+
+        parent: {
+            get: function() {
+                return this._parent;
+            },
+            /**
+             * 부모
+             *
+             * @property parent
+             * @type {adun.Geom.Transform}
+             * @default null
+             * @public
+             */
+            set: function(value) {
+                if( !this.checkAncestor(value) ) {
+                    this._parent = value;
+                    this._dirty = true;
+                }
+            }
+        },
+
+        locked: {
+            get: function() {
+                return this._locked;
+            },
+            /**
+             * transform이 락이 될지를 결정한다
+             * 락 모드에서는 행렬을 업데이트하지않는다
+             * 그러나 여전히 부모는 따른다.
+             * 락모드가 되는경우 현재 프로퍼티값에 의해 행렬리 세팅된다.
+             *
+             * @property locked
+             * @type {Boolean}
+             * @default false
+             * @public
+             */
+            set: function(value) {
+                this._locked = value;
+                if( this._locked ) {
+                    this._matrix.setFromOffsetTransform(this.x, this.y, this.scaleX, this.scaleY, this.rotation, this.anchorPointX, this.anchorPointY);
+                }
+            }
+        },
+
+        ignoreParent: {
+            get: function() {
+                return this._ignoreParent;
+            },
+            /**
+             *행렬을 연결할 때 부모를 무시할지 결정한다.
+             *
+             * @property ignoreParent
+             * @type {Boolean}
+             * @default false
+             * @public
+             */
+            set: function(value) {
+                this._ignoreParent = value;
+            }
+        },
+
+        ignoreChild: {
+            get: function() {
+                return this._ignoreChild;
+            },
+            /**
+             * child가 행렬 계산을 수행할때 부모를 따를지 결정한다.
+             *
+             * @property ignoreChild
+             * @type {Boolean}
+             * @default false
+             * @public
+             */
+            set: function(value) {
+                this._ignoreChild = value;
+            }
+        },
+
+        /**
+         * x, y 좌표를 설정한다.
+         *
+         * @method setPosition
+         * @param x {Number}
+         * @param y {Number}
+         * @return {adun.Geom.Transform} This object
+         * @public
+         */
+        setPosition: function(x, y) {
+            this._x = x;
+            this._y = y;
+            this._dirty = true;
+
+            return this;
+        },
+
+        /**
+         * 포인트로부터 x, y 좌표를 설정한다.
+         *
+         * @method setPositionFromPoint
+         * @param p {adun.Geom.Point}
+         * @return {adun.Geom.Transform} This object
+         * @public
+         */
+        setPositionFromPoint: function(p) {
+            this._x = p.x;
+            this._y = p.y;
+            this._dirty = true;
+
+            return this;
+        },
+
+        /**
+         * 포인트로부터 x, y 좌표를 움직인다.
+         *
+         * @method translatePositionFromPoint
+         * @param p {adun.Geom.Point}
+         * @return {adun.Geom.Transform} This object
+         * @public
+         */
+        translatePositionFromPoint: function(p) {
+            this._x += p.x;
+            this._y += p.y;
+            this._dirty = true;
+
+            return this;
+        },
+
+        /**
+         * transform 객체의 x,y 값을 가진 포인트를 반환한다.
+         *
+         * @method getPositionPoint
+         * @param [output=adun.Geom.Point] {adun.Geom.Point}
+         * @return {adun.Geom.Point}
+         * @public
+         */
+        getPositionPoint: function(output) {
+            if( adun.isUndefined(output) ) { output = new adun.Geom.Point(); }
+
+            return outpuy.setTo(this._x, this._y);
+        },
+
+        /**
+         * transform의 프로퍼티를 설정한다.
+         *
+         * @method
+         * @param [x=0] {Number}
+         * @param [y=0] {Number}
+         * @param [scaleX=1] {Number}
+         * @param [scaleY=1] {Number}
+         * @param [rotation=0] {Number}
+         * @param [rotPointX=0] {Number}
+         * @param [rotPointY=0] {Number}
+         * @return {adun.Geom.Transform}
+         * @public
+         */
+        setTransform: function(x, y, scaleX, scaleY, rotation, rotPointX, rotPointY) {
+            this._x = x || 0;
+            this._y = y || 0;
+            this._scaleX = scaleX || 1;
+            this._scaleY = scaleY || 1;
+            this._rotation = rotationa || 0;
+            this._rotPointX = rotPointX || 0;
+            this._rotPointy = rotPointy || 0;
+
+            this.drity = true;
+
+            return this;
+        },
+
+        /**
+         * 만약 parent가 있다면 parent의 행렬을 반환한다.
+         *
+         * @method getParentMatrix
+         * @return {adun.Geom.Matrix} Parent transform matrix
+         * @public
+         */
+        getParentMatrix: function() {
+            if( this._parent ) {
+                return this._parent.getConcatenatedMatrix();
+            }
+
+            return null;
+        },
+
+        /**
+         * 모든 조상과 연결된 행렬을 반환한다.
+         * 조상(부모)가 없을경우 리턴된 행렬은 이것의 기본 행렬과 같다.
+         * @method getConcatenatedMatrix
+         * @return {adun.Geom.Matrix}
+         * @public
+         */
+        getConcatenatedMatrix: function() {
+            /*
+            CASE:
+            - This dirty, parent dirty : Update Matrix, build concat
+            - This dirty, parent clean : Update Matrix, build concat
+            - This dirty, no parent    : Update Matrix
+            - This clean, parent dirty : build concat
+            - This clean, parent clean : Use cachedConcatenated Matrix
+            - This clean, no parent    : Use cachedConcatenated Matrix
+
+            SIMPLE 4CASE
+            - This dirty, has parent : Update Matrix, build concat
+            - This dirty, no parent  : Update Matrix
+            - This clean, no parent  : Build concat
+            - Otherwise              : Use cachedConcatenated Matrix
+
+            ㄴ USE
+            */
+
+
+            if( this._dirty && !this.locked ) {
+                this._matrix.setFromOffsetTransform(this.x, this.y, this.scaleX, this.scaleY, this.rotation, this.anchorPointX, this.anchorPointY);
+            }
+
+            this._cachedConcatenatedMatrix.copyFrom(this._matrix);
+
+            if( this._parent && !this._parent.ignoreChild && !this.ignoreParent ) {
+                this._cachedConcatenatedMatrix.tx -= this._parent.anchorPointX;
+                this._cachedConcatenatedMatrix.ty -= this._parent.anchorPointY;
+
+                this._cachedConcatenatedMatrix.prependMatrix(this.getParentMatrix());
+            }
+
+            this._drity = false;
+
+            return this._cachedConcatenatedMatrix;
+        },
+
+        /**
+         * 포인트로부터 transform 객체의 행렬을 변환시킨다.
+         *
+         * @method transformPoint
+         * @param p {adun.Geom.Point}
+         * @return {adun.Geom.Point}
+         * @public
+         */
+        transformPint: function(p) {
+            var mat = this.getConcatenatedMatrix();
+
+            return mat.transformPoint(p);
+        },
+
+        /**
+         * 매개변수 값이 조상중에 있는지 체크한다.
+         *
+         * @mathod checkAncestor
+         * @param transform {adun.Geom.Transform}
+         * @return {Boolean}
+         */
+        checkAncestor: function(transform) {
+            // ready...
+
+            return false;
+        },
+
+
+        /**
+         * 같은 프로퍼티 값을 가진 새로운 Transform 객체를 반환한다.
+         *
+         * @method clone
+         * @param [output=adun.Geom.Transform] {adun.Geom.Transform}
+         * @return {adun.Geom.Transform}
+         * @public
+         */
+        clone: function(output) {
+            if( adun.isUndefined(output) ) { output = new Transform(); }
+
+            output.copyFrom(this);
+
+            return output;
+        },
+
+        /**
+         * 다른 Transform 객체로부터 프로퍼티 값을 이 Transform 객체로 복사한다.
+         *
+         * @param source {adun.Geom.Transform}
+         * @return {adun.Geom.Transform}
+         * @public
+         */
+        copyFrom: function(source) {
+            this.setTransform(source.x, source.y, source.scaleX, source.scaleY, source.rotation, source.rotPointX, source.rotPointY);
+            this.parent = source.parent;
+            this._matrix = source.matrix.clone();
+
+            return this;
+        },
+
+
+        /**
+         * 이 Transform 객체의 프로퍼티 값을 파라미터로 받은 Transform 객체에 복사한다.
+         *
+         * @param target {adun.Geom.Transform}
+         * @return {adun.Geom.Transform} This object
+         * @public
+         */
+        copyTo: function(target) {
+            target.copyFrom(this);
+
+            return this;
         }
     });
 })();
@@ -3008,7 +3521,7 @@
 
         /**
          * -------------------------------------------------------------------------------------------------------------
-         * Lines (선)
+         * Lines (직선)
          * -------------------------------------------------------------------------------------------------------------
          */
 
@@ -3058,7 +3571,7 @@
         /**
          * 직선과 선분이 한 지점에서 교차(충돌)했는지 검사한다.
          *
-         * @method lineToSegment
+         * @method lineToLineSegment
          * @param line1 {adun.Geom.Line} 첫번째 선(직선)
          * @param seg {adun.Geom.Line] 두번째 선(선분)
          * @param [output] {adun.Geom.IntersectResult} 교차점에 대한 정보를 저장한다. [옵션]
@@ -3066,7 +3579,7 @@
          * @public
          * @static
          */
-        lineToSegment: function(line1, seg, output) {
+        lineToLineSegment: function(line1, seg, output) {
             if( adun.isUndefined(output) ) { output = new adun.Geom.IntersectResult(); }
 
             output.result = false;
@@ -3157,7 +3670,7 @@
                 return output;
             }
 
-            ouput.result = false;
+            output.result = false;
             return output;
         },
 
@@ -3235,13 +3748,448 @@
 
             output.result = false;
 
+            // Top of the Rectangle VS the Line
             adun.Geom.Intersect.lineToRawSegment(line, rect.x, rect.y, rect.right, rect.y, output);
-
             if( output.result == true ) {
                 return output;
             }
 
+            // Left of the Rectangle VS the Line
+            adun.Geom.Intersect.lineToRawSegment(line, rect.x, rect.y, rect.x, rect.bottom, output);
+            if( output.result == true ) {
+                return output;
+            }
 
+            // Bottom of the Rectangle VS the Line
+            adun.Geom.Intersect.lineToRawSegment(line, rect.x, rect.bottom, rect.right, rect.bottom, output);
+            if( output.result == true ) {
+                return output;
+            }
+
+            // Right of the Rectangle VS the Line
+            adun.Geom.Intersect.lineToRawSegment(line, rect.right, rect.y, rect.right, rect.bottom, output);
+
+            return output;
+        },
+
+
+        /**
+         * -------------------------------------------------------------------------------------------------------------
+         * Segment (선분)
+         * -------------------------------------------------------------------------------------------------------------
+         */
+
+
+        /**
+         * 선분과 선분이 한 지점에서 교차(충돌)했는지 검사한다.
+         *
+         * @method lineSegmentToLineSegment
+         * @param seg1 {adun.Geom.Line} 첫번째 선(선분)
+         * @param seg2 {adun.Geom.Line] 두번째 선(선분)
+         * @param [output] {adun.Geom.IntersectResult} 교차점에 대한 정보를 저장한다. [옵션]
+         * @return {adun.Geom.IntersectResult}
+         * @public
+         * @static
+         */
+        lineSegmentToLineSegment: function(line1, line2, output) {
+            if( adun.isUndefined(output) ) { output = new adun.Geom.IntersectResult(); }
+
+            output.result = false;
+
+            adun.Geom.Intersect.lineToLineSegment(line1, line2, output);
+
+            if( output.result === true ) {
+                if (!(output.x >= Math.min(line1.x1, line1.x2) && output.x <= Math.max(line1.x1, line1.x2) && output.y >= Math.min(line1.y1, line1.y2) && output.y <= Math.max(line1.y1, line1.y2))) {
+                    output.result = false;
+                }
+            }
+
+            return output;
+        },
+
+        /**
+         * 선분과 광선이 한 지점에서 교차(충돌)했는지 검사한다.
+         *
+         * @method lineSegmentToRay
+         * @param seg {adun.Geom.Line} 선분
+         * @param ray {adun.Geom.Ray] 광선
+         * @param [output] {adun.Geom.IntersectResult} 교차점에 대한 정보를 저장한다. [옵션]
+         * @return {adun.Geom.IntersectResult}
+         * @public
+         * @static
+         */
+        lineSegmentToRay: function(line1, ray, output) {
+            if( adun.isUndefined(output) ) { output = new adun.Geom.IntersectResult(); }
+
+            output.result = false;
+
+            adun.Geom.Intersect.lineToRay(line1, ray, output);
+
+            if( output.result === true ) {
+                if (!(output.x >= Math.min(line1.x1, line1.x2) && output.x <= Math.max(line1.x1, line1.x2) && output.y >= Math.min(line1.y1, line1.y2) && output.y <= Math.max(line1.y1, line1.y2))) {
+                    output.result = false;
+                }
+            }
+
+            return output;
+        },
+
+
+        /**
+         * 선분과 원이 교차(충돌)했는지 검사한다.
+         *
+         * @method lineSegmentToCircle
+         * @param seg {adun.Geom.Line} 선분
+         * @param circle {adun.Geom.Circle] 원
+         * @param [output] {adun.Geom.IntersectResult} 교차점에 대한 정보를 저장한다. [옵션]
+         * @return {adun.Geom.IntersectResult}
+         * @public
+         * @static
+         */
+        lineSegmentToCircle: function(seg, circle, output) {
+            if( adun.isUndefined(output) ) { output = new adun.Geom.IntersectResult(); }
+
+            output.result = false;
+
+            var perp = seg.perp(circle.x, circle.y);
+
+            if(perp.length <= circle.radius) {
+                var maxX = Math.max(seg.x1, seg.x2);
+                var minX = Math.min(seg.x1, seg.x2);
+                var maxY = Math.max(seg.y1, seg.y2);
+                var minY = Math.min(seg.y1, seg.y2);
+
+                if( (perp.x2 <= maxX && perp.x2 >= minX) && (perp.y2 <= maxY && perp.y2 >= minY) ) {
+                    output.result = true;
+                } else {
+                    if (adun.Geom.Intersect.circleContainsPoint(circle, { x: seg.x1, y: seg.y1 }).result || adun.Geom.Intersect.circleContainsPoint(circle, { x: seg.x2, y: seg.y2 }).result) {
+                        output.result = true;
+                    }
+                }
+            }
+
+            return output;
+        },
+
+        /**
+         * 선분과 사각형이 교차(충돌)했는지 검사한다.
+         *
+         * @method lineSegmentToRctangle
+         * @param seg {adun.Geom.Line} 선분
+         * @param rectangle {adun.Geom.Rectangle] 사각형
+         * @param [output] {adun.Geom.IntersectResult} 교차점에 대한 정보를 저장한다. [옵션]
+         * @return {adun.Geom.IntersectResult}
+         * @public
+         * @static
+         */
+        lineSegmentToRectangle: function(seg, rect, output) {
+            if (adun.isUndefined(output)) {
+                output = new adun.Geom.IntersectResult();
+            }
+
+            output.result = false;
+
+            if (rect.contains(seg.x1, seg.y1) && rect.contains(seg.x2, seg.y2)) {
+                output.x = (seg.x1 + seg.x2) / 2;
+                output.y = (seg.y1 + seg.y2) / 2;
+                output.result = true;
+            } else {
+
+                // Top of the Rectangle VS the Line
+                adun.Geom.Intersect.lineToRawSegment(seg, rect.x, rect.y, rect.right, rect.y, output);
+                if (output.result == true) {
+                    return output;
+                }
+
+                // Left of the Rectangle VS the Line
+                adun.Geom.Intersect.lineToRawSegment(seg, rect.x, rect.y, rect.x, rect.bottom, output);
+                if (output.result == true) {
+                    return output;
+                }
+
+                // Bottom of the Rectangle VS the Line
+                adun.Geom.Intersect.lineToRawSegment(seg, rect.x, rect.bottom, rect.right, rect.bottom, output);
+                if (output.result == true) {
+                    return output;
+                }
+
+                // Right of the Rectangle VS the Line
+                adun.Geom.Intersect.lineToRawSegment(seg, rect.right, rect.y, rect.right, rect.bottom, output);
+            }
+
+            return output;
+        },
+
+
+        /**
+         * -------------------------------------------------------------------------------------------------------------
+         * Ray (광선)
+         * -------------------------------------------------------------------------------------------------------------
+         */
+
+
+        /**
+         * 광선과 원이 교차(충돌)했는지 검사한다.
+         *
+         * @method rayToCircle
+         * @param ray {adun.Geom.Ray} 광선
+         * @param circle {adun.Geom.Circle] 원
+         * @param [output] {adun.Geom.IntersectResult} 교차점에 대한 정보를 저장한다. [옵션]
+         * @return {adun.Geom.IntersectResult}
+         * @public
+         * @static
+         */
+        rayToCircle: function(ray, circle, output) {
+            if (adun.isUndefined(output)) {
+                output = new adun.Geom.IntersectResult();
+            }
+
+            output.result = false;  
+
+            var dx = circle.x - ray.x1;
+            var dy = circle.y - ray.y1;
+
+            if( Math.sqrt(dx * dx + dy * dy) <= circle.radius ) {
+                output.result = true;
+                return output;
+            }
+
+            // ???
+
+            adun.Geom.Intersect.lineToCircle(ray, circle, output);
+
+            return output;
+        },
+
+        /**
+         * 광선과 사각형이 교차(충돌)했는지 검사한다.
+         *
+         * @method rayToRctangle
+         * @param ray {adun.Geom.Ray} 광선
+         * @param rectangle {adun.Geom.Rectangle] 사각형
+         * @param [output] {adun.Geom.IntersectResult} 교차점에 대한 정보를 저장한다. [옵션]
+         * @return {adun.Geom.IntersectResult}
+         * @public
+         * @static
+         */
+        rayToRectangle: function(ray, rect, output) {
+            if (adun.isUndefined(output)) {
+                output = new adun.Geom.IntersectResult();
+            }
+
+            output.result = false;
+
+            adun.Geom.Intersect.lineToRectangle(ray, rect, output);
+
+            return output;
+        },
+
+        /**
+         * 광선과 선분이 한 지점에서 교차(충돌)했는지 검사한다.
+         *
+         * @param rayx1
+         * @param rayy1
+         * @param rayx2
+         * @param rayy2
+         * @param linex1
+         * @param liney1
+         * @param linex2
+         * @param liney2
+         * @param output
+         * @return {adun.Geom.IntersectResult}
+         * @public
+         * @static
+         */
+        rayToLineSegment: function(rayx1, rayy1, rayx2, rayy2, linex1, liney1, linex2, liney2, output) {
+            if (adun.isUndefined(output)) {
+                output = new adun.Geom.IntersectResult();
+            }
+
+            output.result = false;
+
+            var r, s, d;
+            // Check lines are not parallel
+            if ((rayy2 - rayy1) / (rayx2 - rayx1) != (liney2 - liney1) / (linex2 - linex1)) {
+                d = (((rayx2 - rayx1) * (liney2 - liney1)) - (rayy2 - rayy1) * (linex2 - linex1));
+                if (d != 0) {
+                    r = (((rayy1 - liney1) * (linex2 - linex1)) - (rayx1 - linex1) * (liney2 - liney1)) / d;
+                    s = (((rayy1 - liney1) * (rayx2 - rayx1)) - (rayx1 - linex1) * (rayy2 - rayy1)) / d;
+                    if (r >= 0) {
+                        if (s >= 0 && s <= 1) {
+                            output.result = true;
+                            output.x = rayx1 + r * (rayx2 - rayx1), rayy1 + r * (rayy2 - rayy1);
+                        }
+                    }
+                }
+            }
+            return output;
+        },
+
+
+        /**
+         * -------------------------------------------------------------------------------------------------------------
+         * Circle (원)
+         * -------------------------------------------------------------------------------------------------------------
+         */
+
+        /**
+         * 원과 원이 교차(충돌)했는지 검사한다.
+         *
+         * @method circleToCircle
+         * @param circle1 {adun.Geom.Circle}
+         * @param circle2 {adun.Geom.Circle}
+         * @return {adun.Geom.IntersectResult}
+         * @public
+         * @static
+         */
+        circleToCircle: function(circle1, circle2) {
+            if (adun.isUndefined(output)) {
+                output = new adun.Geom.IntersectResult();
+            }
+
+            output.result = false;
+
+            output.result = ( (circle1.radius + circle2.radius) * (circle1.radius + circle2.radius) >= adun.Geom.Intersect.distanceSquared(circle1.x, circle1.y, circle2.x, circle2.y) );
+
+            return output;
+        },
+
+        /**
+         * 원과 사각형이 교차(충돌)했는지 검사한다.
+         *
+         * @method circleToRectangle
+         * @param circle {adun.Geom.Circle}
+         * @param rect {adun.Geom.Rectangle}
+         * @return {adun.Geom.IntersectResult}
+         * @public
+         * @static
+         */
+        circleToRectangle: function(circle, rect, output) {
+            if (adun.isUndefined(output)) {
+                output = new adun.Geom.IntersectResult();
+            }
+
+            output.result = false;
+
+            var cornerDistX, cornerDistY, circleRelativeX, circleRelativeY, halfRectWidth, halfRectHeight, rectRangeX, rectRangeY;
+
+            halfRectWidth = rect.width / 2;
+            circleRelativeX = Math.abs(circle.x - rect.x - halfRectWidth);
+            rectRangeX = circle.radius + halfRectWidth;
+
+            // 만약 원이 사각형 x 범위안에 없다면 교차하지 않는다.
+            if( circleRelativeX > rectRangeX ) {
+                output.result = false;
+                return output;
+            }
+
+            halfRectHeight = rect.height / 2;
+            circleRelativeY = Math.abs(circle.y - rect.y - halfRectHeight);
+            rectRangeY = circle.radius + halfRectHeight;
+
+            // 만약 원이 사각형 y 범위안에 없다면 교차하지 않는다.
+            if (circleRelativeY > rectRangeY) {
+                output.result = false;
+                return output;
+            }
+
+
+            if( circleRelativeX <= halfRectWidth || circleRelativeY <= halfRectHeight ) {
+                output.result = true;
+                return result;
+            }
+
+
+            cornerDistX = circleRelativeX - halfRectWidth;
+            cornerDistY = circleRelativeY - halfRectHeight;
+            output.result = cornerDistX * cornerDistX + cornerDistY * cornerDistY <= circle.radius * circle.radius;
+
+            return output;
+        },
+
+        /**
+         * 주어진 포인트가 원 안에있는지 검사한다.
+         *
+         * @method circleContainsPoint
+         * @param circle {adun.Geom.Circle}
+         * @param point {adun.Geom.Point}
+         * @return {adun.Geom.IntersectResult}
+         * @public
+         * @static
+         */
+        circleContainsPoint: function(circle, point, output) {
+            if (adun.isUndefined(output)) {
+                output = new adun.Geom.IntersectResult();
+            }
+
+            output.result = false;
+
+            output.result = circle.radius * circle.radius >= adun.Geom.Intersect.distanceSquared(circle.x, circle.y, point.x, point.y);
+
+            return output;
+        },
+
+        /**
+         * -------------------------------------------------------------------------------------------------------------
+         * Rectangle (사각형)
+         * -------------------------------------------------------------------------------------------------------------
+         */
+
+        /**
+         * 주어진 포인트가 사각형 안에있는지 검사한다.
+         *
+         * @method pointToRectangle
+         * @param point {adun.Geom.Point}
+         * @param rect {adun.Geom.Rectangle}
+         * @return {adun.Geom.IntersectResult}
+         * @public
+         * @static
+         */
+        pointToRectangle: function(point, rect, output) {
+            if (adun.isUndefined(output)) {
+                output = new adun.Geom.IntersectResult();
+            }
+
+            output.result = false;
+
+            output.setTo(point.x, point,y);
+            ouput.result = rect.containsPoint(point);
+
+            return output;
+        },
+
+        /**
+         * 사각형과 사각형이 교차(충돌)했는지 검사한다.
+         *
+         * @method rectangleToRectangle
+         * @param rect1 {adun.Geom.Rectangle}
+         * @param rect2 {adun.Geom.Rectangle}
+         * @return {adun.Geom.IntersectResult}
+         * @public
+         * @static
+         */
+        rectangleToRectangle: function(rect1, rect2, output) {
+            if (adun.isUndefined(output)) {
+                output = new adun.Geom.IntersectResult();
+            }
+
+            output.result = false;
+
+            var leftX   = Math.max(rect1.x, rect2.x);
+            var rightX  = Math.min(rect1.right, rect2.right);
+            var topY    = Math.max(rect1.y, rect2.y);
+            var bottomY = Math.min(rect1.bottom, rect2.bottom);
+
+            output.setTo(leftX, topY, rightX - leftX, bottomY - topY, rightX - leftX, bottomY - topY);
+
+            var cx = output.x + output.width * 0.5;
+            var cy = output.y + output.height * 0.5;
+
+            if( (cx > rect1.x && cx < rect1.right) && (cy > rect1.y && cy < rect1.bottom) ) {
+                output.result = true;
+            }
+
+            return output;
         }
     });
 
@@ -3296,7 +4244,5 @@
 
 
 })();
-
-
 
 
